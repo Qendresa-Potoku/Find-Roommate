@@ -25,7 +25,7 @@ const MyProfile = () => {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       setMessage("You need to log in to access your profile.");
@@ -53,7 +53,7 @@ const MyProfile = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       setMessage("You need to log in to update your profile.");

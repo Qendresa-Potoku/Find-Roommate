@@ -5,6 +5,7 @@ import { getUser } from "../services/AuthServices";
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
+  const [friends, setFriends] = useState([]);
   const [message, setMessage] = useState("");
   const user = getUser();
   const navigate = useNavigate();
@@ -14,12 +15,13 @@ const Dashboard = () => {
       navigate("/login");
     } else {
       fetchUsers();
+      fetchFriends(); // Fetch the list of friends for the logged-in user
     }
   }, [user, navigate]);
 
   const fetchUsers = async () => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axios.get("http://localhost:5555/api/auth/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -32,9 +34,24 @@ const Dashboard = () => {
     }
   };
 
+  const fetchFriends = async () => {
+    try {
+      const token = sessionStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5555/api/auth/friends/list",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setFriends(response.data.map((friend) => friend._id)); // Store friends' ids in state
+    } catch (error) {
+      setMessage("Error fetching friends.");
+    }
+  };
+
   const sendFriendRequest = async (recipientId) => {
     try {
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
       const response = await axios.post(
         "http://localhost:5555/api/auth/send-friend-request",
         { recipientId },
@@ -60,12 +77,15 @@ const Dashboard = () => {
           >
             <p className="font-bold">{userItem.name}</p>
             <p>{userItem.email}</p>
-            <button
-              onClick={() => sendFriendRequest(userItem._id)}
-              className="mt-2 bg-blue-500 text-white py-1 px-4 rounded"
-            >
-              Add Friend
-            </button>
+            {/* Conditionally show Add Friend button if not already a friend */}
+            {!friends.includes(userItem._id) && (
+              <button
+                onClick={() => sendFriendRequest(userItem._id)}
+                className="mt-2 bg-blue-500 text-white py-1 px-4 rounded"
+              >
+                Add Friend
+              </button>
+            )}
           </div>
         ))}
       </div>
