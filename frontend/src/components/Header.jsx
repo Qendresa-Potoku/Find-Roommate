@@ -10,7 +10,7 @@ const Header = () => {
 
   const handleLogout = () => {
     resetUserSession();
-    navigate("/");
+    navigate("/login"); // Redirect to login
   };
 
   return (
