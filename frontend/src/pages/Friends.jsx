@@ -12,61 +12,80 @@ const Friends = () => {
 
   useEffect(() => {
     if (user) {
-      fetchFriendRequests();
-      fetchFriends();
+      // Make sure we only fetch once by checking if user data exists
+      fetchData();
     }
-  }, [user]);
+    // This empty array ensures the effect runs only once on mount
+  }, []); // Ensures that useEffect only runs once
+
+  const fetchData = async () => {
+    try {
+      console.log("Fetching data");
+      // Use Promise.all to make both requests simultaneously
+      const [friendReqs, friendsList] = await Promise.all([
+        fetchFriendRequests(),
+        fetchFriends(),
+      ]);
+
+      setFriendRequests(friendReqs);
+      setFriends(friendsList);
+    } catch (error) {
+      console.error("Error loading friends or requests", error);
+      setMessage("Failed to load data.");
+    }
+  };
 
   const fetchFriendRequests = async () => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return [];
+
+      console.log("Fetching friend requests");
       const response = await axios.get(
         "http://localhost:5555/api/auth/friends/requests",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setFriendRequests(response.data);
+      return response.data; // Return the friend requests
     } catch (error) {
       setMessage("Error fetching friend requests.");
+      return [];
     }
   };
 
   const fetchFriends = async () => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return [];
+
+      console.log("Fetching friends");
       const response = await axios.get(
         "http://localhost:5555/api/auth/friends/list",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
+      console.log("Friends Response:", response.data);
 
-      // Split friends into accepted and pending requests
-      const acceptedFriends = response.data.filter(
-        (friend) => friend.status === "accepted"
-      );
-      const pendingFriends = response.data.filter(
-        (friend) => friend.status === "pending"
-      );
-
-      setFriends(acceptedFriends);
-      setPendingRequests(pendingFriends);
+      return response.data; // Return friends directly
     } catch (error) {
       setMessage("Error fetching friends.");
+      return [];
     }
   };
 
   const acceptFriendRequest = async (senderId) => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return;
+
       await axios.post(
         "http://localhost:5555/api/auth/friends/accept",
         { senderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchFriendRequests(); // Refresh friend requests
-      fetchFriends(); // Refresh friends list
+      fetchData(); // Refresh all data after accepting
     } catch (error) {
       setMessage("Error accepting friend request.");
     }
@@ -75,12 +94,14 @@ const Friends = () => {
   const deleteFriendRequest = async (senderId) => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return;
+
       await axios.post(
         "http://localhost:5555/api/auth/friends/delete",
         { senderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchFriendRequests(); // Refresh friend requests
+      fetchData(); // Refresh all data after deleting
     } catch (error) {
       setMessage("Error deleting friend request.");
     }
@@ -118,30 +139,23 @@ const Friends = () => {
           {/* Friends List */}
           <h2 className="text-xl mb-4">Your Friends</h2>
           <ul>
-            {friends.map((friend) => (
-              <li
-                key={friend._id}
-                className="border p-4 rounded-lg shadow-md flex justify-between"
-              >
-                <p>{friend.name}</p>
-                <button className="bg-green-500 text-white py-1 px-4 rounded">
-                  Chat
-                </button>
-              </li>
-            ))}
-          </ul>
-
-          {/* Pending Requests */}
-          <h2 className="text-xl mt-4 mb-4">Pending Requests</h2>
-          <ul>
-            {pendingRequests.map((request) => (
-              <li
-                key={request._id}
-                className="border p-4 rounded-lg shadow-md flex justify-between"
-              >
-                <p>{request.name} (Pending)</p>
-              </li>
-            ))}
+            {friends.length > 0 ? (
+              friends.map((friend) => (
+                <li
+                  key={friend._id}
+                  className="border p-4 rounded-lg shadow-md flex justify-between"
+                >
+                  <p>
+                    {friend.name} ({friend.username})
+                  </p>
+                  <button className="bg-green-500 text-white py-1 px-4 rounded">
+                    Chat
+                  </button>
+                </li>
+              ))
+            ) : (
+              <p>You have no friends yet.</p>
+            )}
           </ul>
         </>
       )}
@@ -151,30 +165,34 @@ const Friends = () => {
           {/* Incoming Friend Requests */}
           <h2 className="text-xl mb-4">Incoming Friend Requests</h2>
           <ul>
-            {friendRequests.map((request) => (
-              <li
-                key={request._id}
-                className="border p-4 rounded-lg shadow-md flex justify-between"
-              >
-                <p>
-                  {request.name} ({request.username})
-                </p>
-                <div>
-                  <button
-                    onClick={() => acceptFriendRequest(request._id)}
-                    className="mr-2 bg-green-500 text-white py-1 px-4 rounded"
-                  >
-                    Accept
-                  </button>
-                  <button
-                    onClick={() => deleteFriendRequest(request._id)}
-                    className="bg-red-500 text-white py-1 px-4 rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </li>
-            ))}
+            {friendRequests.length > 0 ? (
+              friendRequests.map((request) => (
+                <li
+                  key={request._id}
+                  className="border p-4 rounded-lg shadow-md flex justify-between"
+                >
+                  <p>
+                    {request.name} ({request.username})
+                  </p>
+                  <div>
+                    <button
+                      onClick={() => acceptFriendRequest(request._id)}
+                      className="mr-2 bg-green-500 text-white py-1 px-4 rounded"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => deleteFriendRequest(request._id)}
+                      className="bg-red-500 text-white py-1 px-4 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))
+            ) : (
+              <p>No friend requests found.</p>
+            )}
           </ul>
         </>
       )}
