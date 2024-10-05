@@ -11,17 +11,19 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) {
-      navigate("/login");
-    } else {
+    if (user) {
       fetchUsers();
-      fetchFriends(); // Fetch the list of friends for the logged-in user
+      fetchFriends();
+    } else {
+      navigate("/login");
     }
-  }, [user, navigate]);
+  }, []);
 
   const fetchUsers = async () => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return;
+
       const response = await axios.get("http://localhost:5555/api/auth/users", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -37,6 +39,8 @@ const Dashboard = () => {
   const fetchFriends = async () => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return;
+
       const response = await axios.get(
         "http://localhost:5555/api/auth/friends/list",
         {
@@ -52,6 +56,8 @@ const Dashboard = () => {
   const sendFriendRequest = async (recipientId) => {
     try {
       const token = sessionStorage.getItem("token");
+      if (!token) return;
+
       const response = await axios.post(
         "http://localhost:5555/api/auth/send-friend-request",
         { recipientId },
