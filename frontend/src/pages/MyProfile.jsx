@@ -565,7 +565,7 @@ const MyProfile = () => {
                       className="card p-4 bg-gray-100 rounded shadow"
                     >
                       <img
-                        src={post.images[0]}
+                        src={`http://localhost:5173${post.images[0]}`}
                         alt="Room"
                         className="w-full h-48 object-cover rounded mb-2"
                       />
