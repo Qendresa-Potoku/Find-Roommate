@@ -9,6 +9,7 @@ const Dashboard = () => {
   const [friends, setFriends] = useState([]);
   const [message, setMessage] = useState("");
   const [activeView, setActiveView] = useState("renters"); // View toggle
+  const [searchQuery, setSearchQuery] = useState(""); // State for search query
   const user = getUser();
   const navigate = useNavigate();
 
@@ -97,31 +98,46 @@ const Dashboard = () => {
     }
   };
 
+  // Filter users or rooms based on search query
+  const filteredUsers = users.filter((userItem) =>
+    userItem.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredRooms = rooms.filter((room) =>
+    room.location.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <div className="p-4">
       {/* Search Bar */}
-      <div className="flex items-center justify-center">
-        <input
-          type="text"
-          placeholder="Where are you looking?"
-          className="p-2 border border-gray-300 rounded-l-lg"
-        />
-        <button
-          className={`p-2 border-t border-b border-gray-300 ${
-            activeView === "renters" ? "bg-gray-300" : "bg-white"
-          }`}
-          onClick={() => handleViewChange("renters")}
-        >
-          Renters
-        </button>
-        <button
-          className={`p-2 border rounded-r-lg border-gray-300 ${
-            activeView === "rooms" ? "bg-gray-300" : "bg-white"
-          }`}
-          onClick={() => handleViewChange("rooms")}
-        >
-          Rooms
-        </button>
+      <div className="flex items-center justify-center my-4">
+        <div className="flex items-center border border-gray-300 rounded-full bg-gray-100 px-4 py-2">
+          <input
+            type="text"
+            placeholder="Where are you looking?"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="flex-grow outline-none bg-transparent text-gray-600"
+          />
+          <button
+            className={`flex items-center ml-2 px-4 py-2 rounded-full ${
+              activeView === "renters" ? "bg-gray-300" : "bg-white"
+            }`}
+            onClick={() => handleViewChange("renters")}
+          >
+            <span className="mr-2">Renters</span>
+            <i className="fas fa-user"></i>
+          </button>
+          <button
+            className={`flex items-center ml-2 px-4 py-2 rounded-full ${
+              activeView === "rooms" ? "bg-gray-300" : "bg-white"
+            }`}
+            onClick={() => handleViewChange("rooms")}
+          >
+            <span className="mr-2">Rooms</span>
+            <i className="fas fa-home"></i>
+          </button>
+        </div>
       </div>
 
       {message && <p>{message}</p>}
@@ -131,7 +147,7 @@ const Dashboard = () => {
         <div>
           <h2 className="text-xl mt-4">Renters:</h2>
           <div className="grid grid-cols-3 gap-4">
-            {users.map((userItem) => (
+            {filteredUsers.map((userItem) => (
               <div
                 key={userItem._id}
                 className="border p-4 rounded-lg shadow-md flex flex-col items-center"
@@ -154,7 +170,7 @@ const Dashboard = () => {
         <div>
           <h2 className="text-xl mt-4">Rooms:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {rooms.map((room) => (
+            {filteredRooms.map((room) => (
               <div
                 key={room._id}
                 className="border p-4 rounded-lg shadow-md bg-white"
