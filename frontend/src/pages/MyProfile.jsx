@@ -20,7 +20,9 @@ const MyProfile = () => {
     pets: "",
     smokes: "",
     speaks: "",
+    image: "",
   });
+  const [selectedImage, setSelectedImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
   const [canPostRoom, setCanPostRoom] = useState(false); // Switch for room post form
@@ -74,6 +76,11 @@ const MyProfile = () => {
         .catch(() => setMessage("Error fetching room posts."));
     }
   }, [activeTab]);
+
+  const handleUserImageChange = (e) => {
+    const file = e.target.files[0];
+    setSelectedImage(file);
+  };
 
   // Handle input changes for room post form
   const handleRoomChange = (e) => {
@@ -145,14 +152,27 @@ const MyProfile = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const token = sessionStorage.getItem("token");
+    const formData = new FormData();
+
+    for (const key in userData) {
+      formData.append(key, userData[key]);
+    }
+
+    if (selectedImage) {
+      formData.append("image", selectedImage); // Attach the image file
+    }
 
     axios
-      .put("http://localhost:5555/api/auth/update", userData, {
-        headers: { Authorization: `Bearer ${token}` },
+      .put("http://localhost:5555/api/auth/update-image", formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "multipart/form-data",
+        },
       })
       .then((response) => {
         setMessage("Profile updated successfully.");
         setIsEditing(false);
+        setUserData(response.data.user); // Update the user data with the response
       })
       .catch(() => setMessage("Error updating profile."));
   };
@@ -235,6 +255,19 @@ const MyProfile = () => {
             {!isEditing ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
+                  <img
+                    src={
+                      userData.image
+                        ? `http://localhost:5555/${userData.image.replace(
+                            /\\/g,
+                            "/"
+                          )}`
+                        : "/default-profile.png"
+                    }
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover mb-4"
+                  />
+
                   <p>
                     <strong>Name:</strong> {userData.name}
                   </p>
@@ -285,6 +318,29 @@ const MyProfile = () => {
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
               >
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-sm font-medium">
+                    Profile Image
+                  </label>
+                  <img
+                    src={
+                      userData.image
+                        ? `http://localhost:5555/${userData.image.replace(
+                            /\\/g,
+                            "/"
+                          )}`
+                        : "/default-profile.png"
+                    }
+                    alt="Profile"
+                    className="w-24 h-24 rounded-full object-cover mb-2"
+                  />
+                  <input
+                    type="file"
+                    onChange={handleUserImageChange}
+                    accept="image/*"
+                    className="mt-2"
+                  />
+                </div>
                 <div>
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium">

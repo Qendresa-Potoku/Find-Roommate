@@ -6,8 +6,13 @@ import roomRoutes from "./routes/roomRoutes.js";
 import bodyParser from "body-parser";
 import dotenv from "dotenv";
 import cors from "cors";
+import { fileURLToPath } from "url";
+import path from "path";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
@@ -15,9 +20,9 @@ app.use(cors({ origin: "http://localhost:5173" }));
 app.use(bodyParser.json());
 
 // Routes
-app.use("/api/auth", authRoutes); // Auth routes for login/register
-// Add the room routes
+app.use("/api/auth", authRoutes);
 app.use("/api/rooms", roomRoutes);
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // Default route
 app.get("/", (req, res) => {

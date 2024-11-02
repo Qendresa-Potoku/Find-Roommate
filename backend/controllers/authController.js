@@ -2,10 +2,12 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { buildResponse } from "../utils/util.js";
+import multer from "multer";
 
 // Register a user
 export const register = async (req, res) => {
   const { name, email, username, password, ...rest } = req.body;
+  const image = req.file ? req.file.path : null;
 
   if (!name || !email || !username || !password) {
     return buildResponse(res, 400, { message: "All fields are required" });
@@ -23,6 +25,7 @@ export const register = async (req, res) => {
       email,
       username,
       password: hashedPassword,
+      image,
       ...rest,
     });
 
@@ -81,11 +84,10 @@ export const verify = (req, res) => {
 };
 
 export const updateUserProfile = async (req, res) => {
-  const userId = req.userId; // Extracted from the verifyToken middleware
-  const { username, ...updateData } = req.body; // Destructure username from other fields
+  const userId = req.userId;
+  const { username, ...updateData } = req.body;
 
   try {
-    // Fetch the current user's data from the database
     const currentUser = await User.findById(userId);
 
     if (!currentUser) {
@@ -136,6 +138,41 @@ export const getUserProfile = async (req, res) => {
     }
 
     res.status(200).json({ user });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./uploads"); // Ensure this directory exists
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+
+// Initialize multer with storage
+export const upload = multer({ storage });
+
+// Controller function for updating profile image
+export const updateProfileImage = async (req, res) => {
+  const userId = req.userId;
+  const imagePath = req.file ? req.file.path : null; // Get the uploaded file path
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { image: imagePath },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res
+      .status(200)
+      .json({ message: "Profile image updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
   }

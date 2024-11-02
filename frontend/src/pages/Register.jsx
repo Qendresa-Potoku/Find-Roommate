@@ -14,6 +14,11 @@ const Register = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const [image, setImage] = useState(null);
+
+  const handleImageChange = (e) => {
+    setImage(e.target.files[0]);
+  };
 
   useEffect(() => {
     if (user) {
@@ -46,6 +51,9 @@ const Register = () => {
         requestBody[ele.name] = ele.value;
       }
     }
+    if (image) {
+      formData.append("image", image);
+    }
 
     axios
       .post(registerUrl, requestBody)
@@ -72,6 +80,7 @@ const Register = () => {
         <form onSubmit={submitHandler}>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Column 1 */}
+            <input type="file" onChange={handleImageChange} accept="image/*" />
             <div>
               <div className="mb-4">
                 <label
