@@ -145,7 +145,6 @@ const Dashboard = () => {
       {/* Conditionally render Renters or Rooms */}
       {activeView === "renters" ? (
         <div>
-          <h2 className="text-xl mt-4">Renters:</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredUsers.map((userItem) => (
               <div
@@ -181,7 +180,6 @@ const Dashboard = () => {
         </div>
       ) : (
         <div>
-          <h2 className="text-xl mt-4">Rooms:</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredRooms.map((room) => (
               <div
