@@ -146,22 +146,35 @@ const Dashboard = () => {
       {activeView === "renters" ? (
         <div>
           <h2 className="text-xl mt-4">Renters:</h2>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredUsers.map((userItem) => (
               <div
                 key={userItem._id}
-                className="border p-4 rounded-lg shadow-md flex flex-col items-center"
+                className="border p-4 rounded-lg shadow-md flex items-center w-[300px] h-[120px]" // Set width and height
               >
-                <p className="font-bold">{userItem.name}</p>
-                <p>{userItem.email}</p>
-                {!friends.includes(userItem._id) && (
-                  <button
-                    onClick={() => sendFriendRequest(userItem._id)}
-                    className="mt-2 bg-blue-500 text-white py-1 px-4 rounded"
-                  >
-                    Add Friend
-                  </button>
-                )}
+                <div className="flex-shrink-0">
+                  {userItem.image ? (
+                    <img
+                      src={`http://localhost:5555/${userItem.image}`}
+                      alt="User"
+                      className="rounded-full w-16 h-16 object-cover mr-4" // Round image with fixed size and margin
+                    />
+                  ) : (
+                    <div className="rounded-full w-16 h-16 bg-gray-200 mr-4"></div> // Placeholder if no image
+                  )}
+                </div>
+                <div className="flex flex-col">
+                  <p className="font-bold text-lg">{userItem.name}</p>
+                  <p className="text-gray-600 text-sm">{userItem.email}</p>
+                  {!friends.includes(userItem._id) && (
+                    <button
+                      onClick={() => sendFriendRequest(userItem._id)}
+                      className="mt-2 bg-blue-500 text-white py-1 px-4 rounded text-sm"
+                    >
+                      Add Friend
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -176,9 +189,9 @@ const Dashboard = () => {
                 className="border p-4 rounded-lg shadow-md bg-white"
               >
                 <img
-                  src={room.images[0] || "/default-room.png"} // Placeholder if no image available
+                  src={room.images[0] || "/default-room.png"}
                   alt="Room"
-                  className="w-full h-40 object-cover rounded-md mb-4"
+                  className="w-40 h-40 object-cover rounded-md mb-4"
                 />
                 <div className="mb-4">
                   <p className="text-xl font-bold">${room.rent} / mo</p>

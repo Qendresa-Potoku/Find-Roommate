@@ -3,20 +3,18 @@ import axios from "axios";
 import { getUser } from "../services/AuthServices";
 
 const Friends = () => {
-  const [tab, setTab] = useState("friends"); // Track active tab
+  const [tab, setTab] = useState("friends");
   const [friendRequests, setFriendRequests] = useState([]);
   const [friends, setFriends] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]); // For requests sent by the user
+  const [pendingRequests, setPendingRequests] = useState([]);
   const [message, setMessage] = useState("");
   const user = getUser();
 
   useEffect(() => {
     if (user) {
-      // Make sure we only fetch once by checking if user data exists
       fetchData();
     }
-    // This empty array ensures the effect runs only once on mount
-  }, []); // Ensures that useEffect only runs once
+  }, []);
 
   const fetchData = async () => {
     try {
@@ -145,6 +143,15 @@ const Friends = () => {
                   key={friend._id}
                   className="border p-4 rounded-lg shadow-md flex justify-between"
                 >
+                  {friend.image && (
+                    <img
+                      src={`http://localhost:5555/${
+                        friend.image || "uploads/default-profile.png"
+                      }`}
+                      alt="Friend"
+                      className="rounded-full w-12 h-12 mr-4"
+                    />
+                  )}
                   <p>
                     {friend.name} ({friend.username})
                   </p>
@@ -171,6 +178,15 @@ const Friends = () => {
                   key={request._id}
                   className="border p-4 rounded-lg shadow-md flex justify-between"
                 >
+                  {request.image && (
+                    <img
+                      src={`http://localhost:5555/${
+                        request.image || "uploads/default-profile.png"
+                      }`}
+                      alt="Request"
+                      className="rounded-full w-12 h-12 mr-4"
+                    />
+                  )}
                   <p>
                     {request.name} ({request.username})
                   </p>

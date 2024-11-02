@@ -1,4 +1,5 @@
 import express from "express";
+import { upload, updateProfileImage } from "../controllers/authController.js";
 import {
   register,
   login,
@@ -141,7 +142,7 @@ router.get("/friends/list", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate(
       "friendlist",
-      "name username"
+      "name username image"
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -152,5 +153,11 @@ router.get("/friends/list", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching friends list." });
   }
 });
+router.put(
+  "/update-image",
+  verifyToken,
+  upload.single("image"),
+  updateProfileImage
+);
 
 export default router;

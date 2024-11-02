@@ -20,6 +20,7 @@ const userSchema = new mongoose.Schema({
   speaks: String,
   friendRequests: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   friendlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  image: { type: String },
 });
 
 const User = mongoose.model("User", userSchema);
