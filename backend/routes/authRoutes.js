@@ -112,6 +112,15 @@ router.post("/friends/accept", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error accepting friend request." });
   }
 });
+// Public route to fetch users without authentication
+router.get("/public-users", async (req, res) => {
+  try {
+    const users = await User.find({}, "name email image"); // Only select fields you want to expose
+    res.status(200).json(users);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching users." });
+  }
+});
 
 // Delete friend request
 router.post("/friends/delete", verifyToken, async (req, res) => {

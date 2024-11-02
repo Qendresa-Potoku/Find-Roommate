@@ -139,3 +139,16 @@ export const getOtherRooms = async (req, res) => {
     return res.status(500).json({ message: "Error fetching rooms", error });
   }
 };
+
+export const getPublicRooms = async (req, res) => {
+  try {
+    const rooms = await Room.find(
+      {},
+      "title location images rent type layout deposit "
+    );
+    return res.status(200).json({ rooms });
+  } catch (error) {
+    console.error("Error fetching public rooms:", error);
+    return res.status(500).json({ message: "Error fetching public rooms" });
+  }
+};
