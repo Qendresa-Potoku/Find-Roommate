@@ -8,6 +8,7 @@ import {
   deleteRoom,
   getOtherRooms,
   getPublicRooms,
+  getMatchedRooms,
 } from "../controllers/roomController.js";
 import { verifyToken } from "../utils/auth.js";
 
@@ -29,5 +30,8 @@ router.delete("/delete/:roomId", verifyToken, deleteRoom);
 router.get("/other-rooms", verifyToken, getOtherRooms);
 
 router.get("/public-rooms", getPublicRooms);
+
+// Route to get matched rooms
+router.get("/matches/rooms", verifyToken, getMatchedRooms);
 
 export default router;

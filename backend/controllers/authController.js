@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { buildResponse } from "../utils/util.js";
 import multer from "multer";
+import { findNearestNeighbors } from "../utils/knnMatcher.js";
 
 // Register a user
 export const register = async (req, res) => {
@@ -175,5 +176,17 @@ export const updateProfileImage = async (req, res) => {
       .json({ message: "Profile image updated successfully", user });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// Endpoint to get matched users for the current user
+export const getMatchedUsers = async (req, res) => {
+  try {
+    const matchedUsers = await findNearestNeighbors(req.userId, 5); // Top 5 users
+    return res.status(200).json(matchedUsers);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
