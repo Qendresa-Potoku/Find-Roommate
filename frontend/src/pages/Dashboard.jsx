@@ -27,15 +27,20 @@ const Dashboard = () => {
       const token = sessionStorage.getItem("token");
       if (!token) return;
 
-      const response = await axios.get("http://localhost:5555/api/auth/users", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        "http://localhost:5555/api/auth/matches/users",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       const filteredUsers = response.data.filter(
         (userItem) => userItem._id !== user.id
       );
+      console.log("Fetched Users:", filteredUsers); // Check if users are fetched
       setUsers(filteredUsers);
     } catch (error) {
-      setMessage("Error fetching users.");
+      setMessage("Error fetching matched users.");
+      console.error("Error fetching matched users:", error); // Log the error
     }
   };
 
@@ -56,19 +61,19 @@ const Dashboard = () => {
     }
   };
 
-  // Fetch rooms not posted by the logged-in user
   const fetchOtherRooms = async () => {
     const token = sessionStorage.getItem("token");
     if (!token) return;
 
     try {
       const response = await axios.get(
-        "http://localhost:5555/api/rooms/other-rooms",
+        "http://localhost:5555/api/rooms/matches/rooms",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      setRooms(response.data.rooms);
+      console.log("Fetched Rooms:", response.data);
+      setRooms(response.data);
     } catch (error) {
       console.error("Error fetching rooms:", error);
       setMessage("Error fetching rooms.");

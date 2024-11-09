@@ -13,11 +13,21 @@ const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchUsers();
-    if (activeView === "rooms") {
-      fetchRooms();
+    if (user) {
+      navigate("/dashboard");
+    } else {
+      fetchUsers();
+      if (activeView === "rooms") {
+        fetchRooms();
+      }
     }
-  }, []);
+  }, [user, activeView, navigate]);
+  // useEffect(() => {
+  //   fetchUsers();
+  //   if (activeView === "rooms") {
+  //     fetchRooms();
+  //   }
+  // }, []);
 
   const fetchUsers = async () => {
     try {
@@ -33,7 +43,7 @@ const Home = () => {
   const fetchRooms = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:5555/api/rooms/public-rooms" // Use a public rooms API if available
+        "http://localhost:5555/api/rooms/public-rooms"
       );
       setRooms(response.data.rooms);
     } catch (error) {

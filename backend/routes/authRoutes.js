@@ -6,6 +6,7 @@ import {
   verify,
   updateUserProfile,
   getUserProfile,
+  getMatchedUsers,
 } from "../controllers/authController.js";
 import { verifyToken } from "../utils/auth.js";
 import User from "../models/userModel.js";
@@ -168,5 +169,8 @@ router.put(
   upload.single("image"),
   updateProfileImage
 );
+
+// Route to get matched users
+router.get("/matches/users", verifyToken, getMatchedUsers);
 
 export default router;

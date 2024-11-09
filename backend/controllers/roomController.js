@@ -1,8 +1,7 @@
-// controllers/roomController.js
-
 import Room from "../models/roomModel.js";
+import { findNearestRooms } from "../utils/knnMatcher.js";
+import User from "../models/userModel.js";
 
-// Add a new room listing
 export const addRoom = async (req, res) => {
   const {
     rent,
@@ -18,7 +17,7 @@ export const addRoom = async (req, res) => {
 
   try {
     const newRoom = new Room({
-      userId: req.userId, // req.userId is extracted from the verified token
+      userId: req.userId,
       rent,
       availableFrom,
       duration,
@@ -150,5 +149,18 @@ export const getPublicRooms = async (req, res) => {
   } catch (error) {
     console.error("Error fetching public rooms:", error);
     return res.status(500).json({ message: "Error fetching public rooms" });
+  }
+};
+
+// Endpoint to get matched rooms for the user's location
+export const getMatchedRooms = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.userId);
+    const matchedRooms = await findNearestRooms(currentUser.location, 5); // Top 5 rooms
+    return res.status(200).json(matchedRooms);
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Server error", error: error.message });
   }
 };
