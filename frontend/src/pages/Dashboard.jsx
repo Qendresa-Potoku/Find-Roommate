@@ -36,7 +36,7 @@ const Dashboard = () => {
       const filteredUsers = response.data.filter(
         (userItem) => userItem._id !== user.id
       );
-      console.log("Fetched Users:", filteredUsers); // Check if users are fetched
+
       setUsers(filteredUsers);
     } catch (error) {
       setMessage("Error fetching matched users.");
@@ -72,7 +72,7 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Fetched Rooms:", response.data);
+
       setRooms(response.data);
     } catch (error) {
       console.error("Error fetching rooms:", error);
@@ -99,7 +99,7 @@ const Dashboard = () => {
   const handleViewChange = (view) => {
     setActiveView(view);
     if (view === "rooms") {
-      fetchOtherRooms(); // Fetch rooms when "Rooms" button is clicked
+      fetchOtherRooms();
     }
   };
 

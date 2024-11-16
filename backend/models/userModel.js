@@ -14,7 +14,16 @@ const userSchema = new mongoose.Schema({
   education: String,
   ethnicity: String,
   income: String,
-  location: String,
+  location: {
+    name: {
+      type: String,
+      required: true,
+    },
+    coordinates: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
+  },
   pets: String,
   smokes: String,
   speaks: String,

@@ -16,7 +16,7 @@ const MyProfile = () => {
     education: "",
     ethnicity: "",
     income: "",
-    location: "",
+    location: { name: "", coordinates: { latitude: null, longitude: null } },
     pets: "",
     smokes: "",
     speaks: "",
@@ -38,9 +38,31 @@ const MyProfile = () => {
     layout: "",
     deposit: "",
     description: "",
-    location: "",
+    location: { name: "", coordinates: { latitude: null, longitude: null } },
     images: [],
   });
+
+  const fetchCoordinates = async (locationName) => {
+    try {
+      const { data } = await axios.get(
+        `https://api.opencagedata.com/geocode/v1/json`,
+        {
+          params: {
+            q: locationName,
+            key: "79bacffd88cd420f9496f5b88eb6266a",
+          },
+        }
+      );
+      if (data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry;
+        return { latitude: lat, longitude: lng };
+      }
+      return null; // Return null if no results are found
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      return null;
+    }
+  };
 
   // Fetch user profile on load
   useEffect(() => {
@@ -85,59 +107,100 @@ const MyProfile = () => {
   // Handle input changes for room post form
   const handleRoomChange = (e) => {
     const { name, value } = e.target;
-    setRoomData({ ...roomData, [name]: value });
+    if (name === "location") {
+      setRoomData({
+        ...roomData,
+        location: {
+          ...roomData.location,
+          name: value,
+        },
+      });
+    } else {
+      setRoomData({ ...roomData, [name]: value });
+    }
   };
 
   // Handle image upload
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    const fileUrls = files.map((file) => URL.createObjectURL(file));
-    setRoomData({ ...roomData, images: fileUrls });
+    setRoomData((prev) => ({ ...prev, images: files }));
   };
 
-  // Submit room post
-  const handleRoomSubmit = (e) => {
+  const handleRoomSubmit = async (e) => {
     e.preventDefault();
     const token = sessionStorage.getItem("token");
 
-    // Check if we are editing or adding a new room
-    const apiUrl = isEditingRoom
-      ? `http://localhost:5555/api/rooms/update/${editRoomId}` // Correct URL for updating
-      : "http://localhost:5555/api/rooms/add"; // URL for adding
+    try {
+      // Fetch coordinates for the location
+      const coordinates = await fetchCoordinates(roomData.location.name);
+      if (!coordinates) {
+        setMessage("Invalid room location. Please enter a valid location.");
+        return;
+      }
 
-    axios
-      .post(apiUrl, roomData, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then((response) => {
-        setMessage(response.data.message);
-        setCanPostRoom(false);
-        setRoomData({
-          rent: "",
-          availableFrom: "",
-          duration: "",
-          type: "",
-          layout: "",
-          deposit: "",
-          description: "",
-          location: "",
-          images: [],
-        });
-        setIsEditingRoom(false); // Exit edit mode after submitting
+      const apiUrl = isEditingRoom
+        ? `http://localhost:5555/api/rooms/update/${editRoomId}`
+        : "http://localhost:5555/api/rooms/add";
 
-        if (isEditingRoom) {
-          // If editing, update the post in the userPosts array
-          setUserPosts((prev) =>
-            prev.map((room) =>
-              room._id === editRoomId ? response.data.room : room
-            )
-          );
-        } else {
-          // If adding, append the new post
-          setUserPosts((prev) => [...prev, response.data.room]);
-        }
-      })
-      .catch(() => setMessage("Error posting room."));
+      // Prepare the room data as a JSON object
+      const roomPayload = {
+        rent: roomData.rent,
+        availableFrom: roomData.availableFrom,
+        duration: roomData.duration,
+        type: roomData.type,
+        layout: roomData.layout,
+        deposit: roomData.deposit,
+        description: roomData.description,
+        location: {
+          name: roomData.location.name,
+          coordinates: {
+            latitude: coordinates.latitude,
+            longitude: coordinates.longitude,
+          },
+        },
+        images: roomData.images.map((image) => image.name), // Use filenames for now
+      };
+
+      // Send room data to the server
+      const response = await axios.post(apiUrl, roomPayload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Handle success
+      setMessage(response.data.message);
+      setRoomData({
+        rent: "",
+        availableFrom: "",
+        duration: "",
+        type: "",
+        layout: "",
+        deposit: "",
+        description: "",
+        location: {
+          name: "",
+          coordinates: { latitude: null, longitude: null },
+        },
+        images: [],
+      });
+      setIsEditingRoom(false);
+
+      // Update room posts
+      if (isEditingRoom) {
+        setUserPosts((prev) =>
+          prev.map((room) =>
+            room._id === editRoomId ? response.data.room : room
+          )
+        );
+      } else {
+        setUserPosts((prev) => [...prev, response.data.room]);
+      }
+    } catch (error) {
+      console.error("Error posting room:", error.response?.data || error);
+      setMessage("Error posting room.");
+    }
   };
 
   // Handle profile edits (unchanged)
@@ -149,32 +212,38 @@ const MyProfile = () => {
     setIsEditing(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const token = sessionStorage.getItem("token");
+
     const formData = new FormData();
-
-    for (const key in userData) {
-      formData.append(key, userData[key]);
-    }
-
+    formData.append("username", userData.username);
+    formData.append("location[name]", userData.location.name); // Nested object handling
     if (selectedImage) {
-      formData.append("image", selectedImage); // Attach the image file
+      formData.append("image", selectedImage); // Include the selected image
     }
 
-    axios
-      .put("http://localhost:5555/api/auth/update-image", formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
-        },
-      })
-      .then((response) => {
-        setMessage("Profile updated successfully.");
-        setIsEditing(false);
-        setUserData(response.data.user); // Update the user data with the response
-      })
-      .catch(() => setMessage("Error updating profile."));
+    try {
+      const response = await axios.put(
+        "http://localhost:5555/api/auth/update",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      setMessage("Profile updated successfully.");
+      setIsEditing(false);
+      setUserData(response.data.user);
+    } catch (error) {
+      console.error("Error updating profile:", error.response?.data || error);
+      setMessage(
+        error.response?.data?.message || "Failed to update profile. Try again."
+      );
+    }
   };
 
   const toggleEdit = () => {
@@ -294,7 +363,7 @@ const MyProfile = () => {
                 </div>
                 <div>
                   <p>
-                    <strong>Location:</strong> {userData.location}
+                    <strong>Location:</strong> {userData.location?.name}
                   </p>
                   <p>
                     <strong>Education:</strong> {userData.education}
@@ -446,22 +515,31 @@ const MyProfile = () => {
                   </div>
 
                   <div className="mb-4">
-                    <label className="block text-gray-700 text-sm font-medium">
+                    <label
+                      htmlFor="location"
+                      className="block text-gray-700 text-sm font-medium"
+                    >
                       Location
                     </label>
-                    <select
+                    <input
+                      placeholder="Enter your location"
+                      id="location"
                       name="location"
-                      value={userData.location}
-                      onChange={handleChange}
+                      type="text"
                       className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
-                    >
-                      <option value="california">California</option>
-                      <option value="new york">New York</option>
-                      <option value="colorado">Colorado</option>
-                      <option value="oregon">Oregon</option>
-                    </select>
+                      required
+                      value={userData.location?.name || ""}
+                      onChange={(e) =>
+                        setUserData({
+                          ...userData,
+                          location: {
+                            ...userData.location,
+                            name: e.target.value,
+                          },
+                        })
+                      }
+                    />
                   </div>
-
                   <div className="mb-4">
                     <label className="block text-gray-700 text-sm font-medium">
                       Education
@@ -567,10 +645,11 @@ const MyProfile = () => {
                     Cancel
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleSubmit}
                     className="bg-blue-600 text-white py-2 px-8 rounded-md hover:bg-blue-700 transition"
                   >
-                    Save Changes
+                    Save Profile
                   </button>
                 </div>
               </form>
@@ -598,7 +677,7 @@ const MyProfile = () => {
                   className="bg-blue-600 text-white py-2 px-8 rounded-md hover:bg-blue-700 transition mb-4"
                   onClick={() => {
                     setCanPostRoom(true);
-                    setIsEditingRoom(false); // Ensure we're not in edit mode
+                    setIsEditingRoom(false);
                     setRoomData({
                       rent: "",
                       availableFrom: "",
@@ -607,13 +686,17 @@ const MyProfile = () => {
                       layout: "",
                       deposit: "",
                       description: "",
-                      location: "",
+                      location: {
+                        name: "",
+                        coordinates: { latitude: null, longitude: null },
+                      },
                       images: [],
-                    }); // Clear the form
+                    });
                   }}
                 >
                   Add New Room
                 </button>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {userPosts.map((post) => (
                     <div
@@ -621,7 +704,7 @@ const MyProfile = () => {
                       className="card p-4 bg-gray-100 rounded shadow"
                     >
                       <img
-                        src={`http://localhost:5173${post.images[0]}`}
+                        src={`http://localhost:5555${post.images[0]}`}
                         alt="Room"
                         className="w-full h-48 object-cover rounded mb-2"
                       />
@@ -640,7 +723,7 @@ const MyProfile = () => {
                         <strong>Deposit:</strong> ${post.deposit}
                       </p>
                       <p>
-                        <strong>Location:</strong> {post.location}
+                        <strong>Location:</strong> {post.location?.name}
                       </p>
 
                       {/* Edit and Delete buttons */}
@@ -751,7 +834,7 @@ const MyProfile = () => {
                   <input
                     type="text"
                     name="location"
-                    value={roomData.location}
+                    value={roomData.location?.name}
                     onChange={handleRoomChange}
                     required
                     className="border p-2 w-full"

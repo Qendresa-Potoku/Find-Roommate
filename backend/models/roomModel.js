@@ -1,5 +1,3 @@
-// models/roomModel.js
-
 import mongoose from "mongoose";
 
 const roomSchema = new mongoose.Schema({
@@ -37,11 +35,17 @@ const roomSchema = new mongoose.Schema({
     required: true,
   },
   location: {
-    type: String,
-    required: true,
+    name: {
+      type: String,
+      required: true,
+    },
+    coordinates: {
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+    },
   },
   images: {
-    type: [String], // Store image URLs
+    type: [String],
   },
   createdAt: {
     type: Date,
