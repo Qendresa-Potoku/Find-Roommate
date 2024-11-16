@@ -4,7 +4,6 @@ import { setUserSession, getUser } from "../services/AuthServices";
 import axios from "axios";
 import "../styles/Header.css";
 
-// Replace with your login API endpoint
 const loginUrl = "http://localhost:5555/api/auth/login";
 
 const Login = () => {
@@ -14,7 +13,6 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState(null);
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (user) {
       navigate("/");
@@ -38,8 +36,8 @@ const Login = () => {
       .then((response) => {
         const { token, user } = response.data;
         if (token && user) {
-          setUserSession(user, token); // Save user and token in sessionStorage
-          navigate("/dashboard"); // Redirect to dashboard
+          setUserSession(user, token);
+          navigate("/dashboard");
         } else {
           setErrorMessage("Invalid response from server");
         }

@@ -19,7 +19,7 @@ const Friends = () => {
   const fetchData = async () => {
     try {
       console.log("Fetching data");
-      // Use Promise.all to make both requests simultaneously
+
       const [friendReqs, friendsList] = await Promise.all([
         fetchFriendRequests(),
         fetchFriends(),
@@ -45,7 +45,7 @@ const Friends = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      return response.data; // Return the friend requests
+      return response.data;
     } catch (error) {
       setMessage("Error fetching friend requests.");
       return [];
@@ -66,7 +66,7 @@ const Friends = () => {
       );
       console.log("Friends Response:", response.data);
 
-      return response.data; // Return friends directly
+      return response.data;
     } catch (error) {
       setMessage("Error fetching friends.");
       return [];
@@ -83,7 +83,7 @@ const Friends = () => {
         { senderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchData(); // Refresh all data after accepting
+      fetchData();
     } catch (error) {
       setMessage("Error accepting friend request.");
     }
@@ -99,7 +99,7 @@ const Friends = () => {
         { senderId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      fetchData(); // Refresh all data after deleting
+      fetchData();
     } catch (error) {
       setMessage("Error deleting friend request.");
     }

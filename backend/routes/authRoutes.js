@@ -13,22 +13,16 @@ import User from "../models/userModel.js";
 
 const router = express.Router();
 
-// Register route
 router.post("/register", upload.single("image"), register);
 
-// Login route
 router.post("/login", login);
 
-// Verify token route
 router.post("/verify", verify);
 
-// Fetch user profile
 router.get("/profile", verifyToken, getUserProfile);
 
-// Update profile route
 router.put("/update", verifyToken, upload.single("image"), updateUserProfile);
 
-// Get all users except the logged-in user
 router.get("/users", verifyToken, async (req, res) => {
   try {
     const users = await User.find({ _id: { $ne: req.userId } });
@@ -38,7 +32,6 @@ router.get("/users", verifyToken, async (req, res) => {
   }
 });
 
-// Send friend request
 router.post("/send-friend-request", verifyToken, async (req, res) => {
   const { recipientId } = req.body;
   try {
@@ -49,7 +42,6 @@ router.post("/send-friend-request", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "Recipient user not found" });
     }
 
-    // Check if the recipient already received the friend request
     if (!recipient.friendRequests.includes(req.userId)) {
       recipient.friendRequests.push(req.userId);
       await recipient.save();
@@ -62,7 +54,6 @@ router.post("/send-friend-request", verifyToken, async (req, res) => {
   }
 });
 
-// Fetch friend requests
 router.get("/friends/requests", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate(
@@ -79,7 +70,6 @@ router.get("/friends/requests", verifyToken, async (req, res) => {
   }
 });
 
-// Accept friend request
 router.post("/friends/accept", verifyToken, async (req, res) => {
   const { senderId } = req.body;
 
@@ -91,16 +81,13 @@ router.post("/friends/accept", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Check if the sender has actually sent a friend request
     if (!user.friendRequests.includes(senderId)) {
       return res.status(400).json({ message: "Friend request not found." });
     }
 
-    // Add each other as friends
     user.friendlist.push(senderId);
     sender.friendlist.push(req.userId);
 
-    // Remove the request from the friend requests
     user.friendRequests = user.friendRequests.filter(
       (id) => id.toString() !== senderId
     );
@@ -113,17 +100,16 @@ router.post("/friends/accept", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error accepting friend request." });
   }
 });
-// Public route to fetch users without authentication
+
 router.get("/public-users", async (req, res) => {
   try {
-    const users = await User.find({}, "name email image"); // Only select fields you want to expose
+    const users = await User.find({}, "name email image");
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ message: "Error fetching users." });
   }
 });
 
-// Delete friend request
 router.post("/friends/delete", verifyToken, async (req, res) => {
   const { senderId } = req.body;
 
@@ -134,7 +120,6 @@ router.post("/friends/delete", verifyToken, async (req, res) => {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Remove the friend request
     user.friendRequests = user.friendRequests.filter(
       (id) => id.toString() !== senderId
     );
@@ -147,7 +132,6 @@ router.post("/friends/delete", verifyToken, async (req, res) => {
   }
 });
 
-// Fetch friend list
 router.get("/friends/list", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate(
@@ -164,7 +148,6 @@ router.get("/friends/list", verifyToken, async (req, res) => {
   }
 });
 
-// Route to get matched users
 router.get("/matches/users", verifyToken, getMatchedUsers);
 
 export default router;

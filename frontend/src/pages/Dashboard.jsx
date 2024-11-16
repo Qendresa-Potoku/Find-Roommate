@@ -5,11 +5,11 @@ import { getUser } from "../services/AuthServices";
 
 const Dashboard = () => {
   const [users, setUsers] = useState([]);
-  const [rooms, setRooms] = useState([]); // State for rooms
+  const [rooms, setRooms] = useState([]);
   const [friends, setFriends] = useState([]);
   const [message, setMessage] = useState("");
-  const [activeView, setActiveView] = useState("renters"); // View toggle
-  const [searchQuery, setSearchQuery] = useState(""); // State for search query
+  const [activeView, setActiveView] = useState("renters");
+  const [searchQuery, setSearchQuery] = useState("");
   const user = getUser();
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ const Dashboard = () => {
       setUsers(filteredUsers);
     } catch (error) {
       setMessage("Error fetching matched users.");
-      console.error("Error fetching matched users:", error); // Log the error
+      console.error("Error fetching matched users:", error);
     }
   };
 
@@ -103,14 +103,17 @@ const Dashboard = () => {
     }
   };
 
-  // Filter users or rooms based on search query
   const filteredUsers = users.filter((userItem) =>
     userItem.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const filteredRooms = rooms.filter((room) =>
-    room.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRooms = rooms.filter((room) => {
+    const locationName =
+      typeof room.location === "string"
+        ? room.location
+        : room.location?.name || "";
+    return locationName.toLowerCase().includes(searchQuery.toLowerCase());
+  });
 
   return (
     <div className="p-4">
@@ -154,17 +157,17 @@ const Dashboard = () => {
             {filteredUsers.map((userItem) => (
               <div
                 key={userItem._id}
-                className="border p-4 rounded-lg shadow-md flex items-center w-[300px] h-[120px]" // Set width and height
+                className="border p-4 rounded-lg shadow-md flex items-center w-[300px] h-[120px]"
               >
                 <div className="flex-shrink-0">
                   {userItem.image ? (
                     <img
                       src={`http://localhost:5555/${userItem.image}`}
                       alt="User"
-                      className="rounded-full w-16 h-16 object-cover mr-4" // Round image with fixed size and margin
+                      className="rounded-full w-16 h-16 object-cover mr-4"
                     />
                   ) : (
-                    <div className="rounded-full w-16 h-16 bg-gray-200 mr-4"></div> // Placeholder if no image
+                    <div className="rounded-full w-16 h-16 bg-gray-200 mr-4"></div>
                   )}
                 </div>
                 <div className="flex flex-col">
@@ -192,7 +195,14 @@ const Dashboard = () => {
                 className="border p-4 rounded-lg shadow-md bg-white"
               >
                 <img
-                  src={room.images[0] || "/default-room.png"}
+                  src={
+                    room.images && room.images.length > 0
+                      ? `http://localhost:5555/${room.images[0].replace(
+                          /\\/g,
+                          "/"
+                        )}`
+                      : "/default-room.png"
+                  }
                   alt="Room"
                   className="w-40 h-40 object-cover rounded-md mb-4"
                 />
@@ -212,7 +222,7 @@ const Dashboard = () => {
                     <strong>Deposit:</strong> ${room.deposit}
                   </p>
                   <p>
-                    <strong>Location:</strong> {room.location}
+                    <strong>Location:</strong> {room.location?.name}
                   </p>
                 </div>
               </div>
