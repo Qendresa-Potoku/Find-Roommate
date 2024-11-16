@@ -1,6 +1,9 @@
 import Room from "../models/roomModel.js";
 import { findNearestRooms } from "../utils/knnMatcher.js";
 import User from "../models/userModel.js";
+import { getCoordinates } from "../utils/geoUtils.js";
+import multer from "multer";
+import fs from "fs";
 
 export const addRoom = async (req, res) => {
   const {
@@ -12,10 +15,18 @@ export const addRoom = async (req, res) => {
     deposit,
     description,
     location,
-    images,
   } = req.body;
 
+  // Handle images
+  const images = req.files ? req.files.map((file) => file.path) : [];
+
   try {
+    // Validate location
+    const coordinates = await getCoordinates(location.name);
+    if (!coordinates) {
+      return res.status(400).json({ message: "Invalid location provided." });
+    }
+
     const newRoom = new Room({
       userId: req.userId,
       rent,
@@ -25,18 +36,32 @@ export const addRoom = async (req, res) => {
       layout,
       deposit,
       description,
-      location,
-      images,
+      location: {
+        name: location.name,
+        coordinates,
+      },
+      images, // Save image paths
     });
 
     await newRoom.save();
     return res
       .status(201)
-      .json({ message: "Room posted successfully", room: newRoom });
+      .json({ message: "Room added successfully", room: newRoom });
   } catch (error) {
-    return res.status(500).json({ message: "Error posting room", error });
+    console.error("Error adding room:", error);
+    return res.status(500).json({ message: "Error adding room", error });
   }
 };
+
+const roomStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "./uploads/rooms");
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + "-" + file.originalname);
+  },
+});
+export const roomUpload = multer({ storage: roomStorage });
 
 // Fetch all rooms posted by the logged-in user
 export const getUserRooms = async (req, res) => {
@@ -48,7 +73,6 @@ export const getUserRooms = async (req, res) => {
   }
 };
 
-// Update room listing
 export const updateRoom = async (req, res) => {
   const { roomId } = req.params;
   const {
@@ -66,16 +90,21 @@ export const updateRoom = async (req, res) => {
   try {
     const room = await Room.findById(roomId);
     if (!room) {
-      return res.status(404).json({ message: "Room not found" });
+      return res.status(404).json({ message: "Room not found." });
     }
 
     if (room.userId.toString() !== req.userId) {
       return res
         .status(403)
-        .json({ message: "Unauthorized to update this room" });
+        .json({ message: "Unauthorized to update this room." });
     }
 
-    // Update the room's fields
+    // Validate location
+    if (!location || !location.name || !location.coordinates) {
+      return res.status(400).json({ message: "Invalid location provided." });
+    }
+
+    // Update room fields
     room.rent = rent;
     room.availableFrom = availableFrom;
     room.duration = duration;
@@ -89,6 +118,7 @@ export const updateRoom = async (req, res) => {
     await room.save();
     return res.status(200).json({ message: "Room updated successfully", room });
   } catch (error) {
+    console.error("Error updating room:", error);
     return res.status(500).json({ message: "Error updating room", error });
   }
 };
@@ -128,7 +158,6 @@ export const deleteRoom = async (req, res) => {
   }
 };
 
-// Fetch all rooms except those posted by the logged-in user
 export const getOtherRooms = async (req, res) => {
   try {
     const rooms = await Room.find({ userId: { $ne: req.userId } });
@@ -152,13 +181,19 @@ export const getPublicRooms = async (req, res) => {
   }
 };
 
-// Endpoint to get matched rooms for the user's location
 export const getMatchedRooms = async (req, res) => {
   try {
     const currentUser = await User.findById(req.userId);
-    const matchedRooms = await findNearestRooms(currentUser.location, 5); // Top 5 rooms
+    const matchedRooms = await findNearestRooms(req.userId, 5); // Get top 5 rooms
+
+    console.log(
+      "Matched Rooms (sorted by geographic and income distance):",
+      matchedRooms
+    );
+
     return res.status(200).json(matchedRooms);
   } catch (error) {
+    console.error("Error fetching matched rooms:", error);
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });

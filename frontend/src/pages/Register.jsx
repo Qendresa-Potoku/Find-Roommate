@@ -13,8 +13,41 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [userLocation, setUserLocation] = useState("");
+  const [coordinates, setCoordinates] = useState({
+    latitude: null,
+    longitude: null,
+  });
   const [message, setMessage] = useState(null);
   const [image, setImage] = useState(null);
+
+  const fetchCoordinates = async (locationName) => {
+    try {
+      const { data } = await axios.get(
+        `https://api.opencagedata.com/geocode/v1/json`,
+        {
+          params: {
+            q: locationName,
+            key: "79bacffd88cd420f9496f5b88eb6266a",
+          },
+        }
+      );
+      if (data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry;
+        setCoordinates({ latitude: lat, longitude: lng });
+      } else {
+        setMessage("Invalid location entered.");
+      }
+    } catch (error) {
+      setMessage("Failed to fetch location coordinates.");
+    }
+  };
+
+  useEffect(() => {
+    if (userLocation) {
+      fetchCoordinates(userLocation);
+    }
+  }, [userLocation]);
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -26,48 +59,73 @@ const Register = () => {
     }
   }, [user, navigate]);
 
-  const submitHandler = (event) => {
+  const submitHandler = async (event) => {
     event.preventDefault();
 
+    // Validation to ensure all required fields are filled
     if (
       name.trim() === "" ||
       email.trim() === "" ||
       username.trim() === "" ||
-      password.trim() === ""
+      password.trim() === "" ||
+      userLocation.trim() === ""
     ) {
       setMessage("All fields required");
       return;
     }
 
-    const requestBody = {
-      name,
-      email,
-      username,
-      password,
-    };
+    try {
+      // Fetch coordinates using OpenCage API
+      const { data } = await axios.get(
+        `https://api.opencagedata.com/geocode/v1/json`,
+        {
+          params: {
+            q: userLocation,
+            key: "79bacffd88cd420f9496f5b88eb6266a",
+          },
+        }
+      );
 
-    for (let ele of event.target.elements) {
-      if (ele.name !== "") {
-        requestBody[ele.name] = ele.value;
-      }
-    }
-    if (image) {
-      formData.append("image", image);
-    }
+      if (data.results.length > 0) {
+        const { lat, lng } = data.results[0].geometry;
 
-    axios
-      .post(registerUrl, requestBody)
-      .then((response) => {
+        // Construct the request body
+        const requestBody = {
+          name,
+          email,
+          username,
+          password,
+          location: {
+            name: userLocation,
+            coordinates: { latitude: lat, longitude: lng },
+          },
+        };
+
+        // Dynamically add form elements to the request body
+        for (let ele of event.target.elements) {
+          if (ele.name && !requestBody.hasOwnProperty(ele.name)) {
+            requestBody[ele.name] = ele.value;
+          }
+        }
+
+        // Send the POST request
+        const response = await axios.post(registerUrl, requestBody);
+        console.log("Registration Response:", response.data);
         setMessage("Registration successful");
         navigate("/login");
-      })
-      .catch((error) => {
-        if (error.response?.status === 401 || error.response?.status === 403) {
-          setMessage(error.response.data.message);
-        } else {
-          setMessage("Backend server error");
-        }
-      });
+      } else {
+        setMessage("Invalid location entered.");
+      }
+    } catch (error) {
+      console.error(
+        "Error during registration:",
+        error.response?.data || error.message
+      );
+      setMessage(
+        error.response?.data?.message ||
+          "Failed to fetch location coordinates or register user."
+      );
+    }
   };
 
   return (
@@ -330,23 +388,15 @@ const Register = () => {
                 >
                   Location
                 </label>
-                <select
-                  name="location"
-                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
+                <input
+                  placeholder="Enter your location"
                   id="location"
+                  type="text"
+                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
                   required
-                >
-                  <option>Select Location</option>
-                  <option value="california">California</option>
-                  <option value="colorado">Colorado</option>
-                  <option value="new york">New York</option>
-                  <option value="oregon">Oregon</option>
-                  <option value="arizona">Arizona</option>
-                  <option value="hawaii">Hawaii</option>
-                  <option value="montana">Montana</option>
-                  <option value="spain">Spain</option>
-                  <option value="nevada">Nevada</option>
-                </select>
+                  value={userLocation}
+                  onChange={(event) => setUserLocation(event.target.value)} // Update userLocation
+                />
               </div>
 
               <div className="mb-4">

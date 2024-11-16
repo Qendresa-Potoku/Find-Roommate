@@ -1,5 +1,5 @@
 import express from "express";
-import { upload, updateProfileImage } from "../controllers/authController.js";
+import { upload } from "../controllers/authController.js";
 import {
   register,
   login,
@@ -14,7 +14,7 @@ import User from "../models/userModel.js";
 const router = express.Router();
 
 // Register route
-router.post("/register", register);
+router.post("/register", upload.single("image"), register);
 
 // Login route
 router.post("/login", login);
@@ -26,7 +26,7 @@ router.post("/verify", verify);
 router.get("/profile", verifyToken, getUserProfile);
 
 // Update profile route
-router.put("/update", verifyToken, updateUserProfile);
+router.put("/update", verifyToken, upload.single("image"), updateUserProfile);
 
 // Get all users except the logged-in user
 router.get("/users", verifyToken, async (req, res) => {
@@ -163,12 +163,6 @@ router.get("/friends/list", verifyToken, async (req, res) => {
     res.status(500).json({ message: "Error fetching friends list." });
   }
 });
-router.put(
-  "/update-image",
-  verifyToken,
-  upload.single("image"),
-  updateProfileImage
-);
 
 // Route to get matched users
 router.get("/matches/users", verifyToken, getMatchedUsers);

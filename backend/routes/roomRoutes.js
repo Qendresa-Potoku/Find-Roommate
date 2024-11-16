@@ -1,5 +1,3 @@
-// routes/roomRoutes.js
-
 import express from "express";
 import {
   addRoom,
@@ -11,17 +9,23 @@ import {
   getMatchedRooms,
 } from "../controllers/roomController.js";
 import { verifyToken } from "../utils/auth.js";
+import { roomUpload } from "../controllers/roomController.js";
 
 const router = express.Router();
 
 // Route to add a new room
-router.post("/add", verifyToken, addRoom);
+router.post("/add", verifyToken, roomUpload.array("images"), addRoom);
 
 // Route to fetch all rooms posted by the user
 router.get("/", verifyToken, getUserRooms);
 
 // Route to update a room listing
-router.post("/update/:roomId", verifyToken, updateRoom);
+router.post(
+  "/update/:roomId",
+  verifyToken,
+  roomUpload.array("images"),
+  updateRoom
+);
 
 // Route to delete a room
 router.delete("/delete/:roomId", verifyToken, deleteRoom);
