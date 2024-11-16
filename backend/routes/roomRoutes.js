@@ -13,13 +13,10 @@ import { roomUpload } from "../controllers/roomController.js";
 
 const router = express.Router();
 
-// Route to add a new room
 router.post("/add", verifyToken, roomUpload.array("images"), addRoom);
 
-// Route to fetch all rooms posted by the user
 router.get("/", verifyToken, getUserRooms);
 
-// Route to update a room listing
 router.post(
   "/update/:roomId",
   verifyToken,
@@ -27,15 +24,12 @@ router.post(
   updateRoom
 );
 
-// Route to delete a room
 router.delete("/delete/:roomId", verifyToken, deleteRoom);
 
-//Fetch rooms
 router.get("/other-rooms", verifyToken, getOtherRooms);
 
 router.get("/public-rooms", getPublicRooms);
 
-// Route to get matched rooms
 router.get("/matches/rooms", verifyToken, getMatchedRooms);
 
 export default router;

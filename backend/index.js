@@ -16,7 +16,7 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
-// Middleware
+
 app.use(bodyParser.json());
 
 // Routes
@@ -29,7 +29,6 @@ app.get("/", (req, res) => {
   res.status(200).send("Welcome To MERN Stack");
 });
 
-// Connect to MongoDB and start the server
 mongoose
   .connect(mongoDBURL, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => {

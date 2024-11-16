@@ -22,12 +22,6 @@ const Home = () => {
       }
     }
   }, [user, activeView, navigate]);
-  // useEffect(() => {
-  //   fetchUsers();
-  //   if (activeView === "rooms") {
-  //     fetchRooms();
-  //   }
-  // }, []);
 
   const fetchUsers = async () => {
     try {

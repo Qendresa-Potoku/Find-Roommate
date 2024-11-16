@@ -24,7 +24,6 @@ export const register = async (req, res) => {
   }
 
   try {
-    // Validate and destructure location
     const { name: locationName, coordinates } = location;
 
     if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
@@ -65,7 +64,6 @@ export const register = async (req, res) => {
   }
 };
 
-// Login a user
 export const login = async (req, res) => {
   const { username, password } = req.body;
 
@@ -96,7 +94,6 @@ export const login = async (req, res) => {
   }
 };
 
-// Token verification
 export const verify = (req, res) => {
   const token = req.body.token;
 
@@ -113,12 +110,11 @@ export const verify = (req, res) => {
 };
 
 export const updateUserProfile = async (req, res) => {
-  const userId = req.userId; // Extract user ID from verified token
-  const { username, location, ...updateData } = req.body; // Destructure non-file fields
-  const imagePath = req.file ? req.file.path : null; // Check if a file was uploaded
+  const userId = req.userId;
+  const { username, location, ...updateData } = req.body;
+  const imagePath = req.file ? req.file.path : null;
 
   try {
-    // Fetch the current user from the database
     const currentUser = await User.findById(userId);
     if (!currentUser) {
       return res.status(404).json({ message: "User not found" });
@@ -126,7 +122,6 @@ export const updateUserProfile = async (req, res) => {
 
     const updatedFields = { ...updateData };
 
-    // Handle username update
     if (username && username !== currentUser.username) {
       const usernameExists = await User.findOne({ username });
       if (usernameExists) {
@@ -135,7 +130,6 @@ export const updateUserProfile = async (req, res) => {
       updatedFields.username = username;
     }
 
-    // Handle location update
     if (location) {
       const coordinates = await getCoordinates(location.name);
       if (!coordinates || !coordinates.latitude || !coordinates.longitude) {
@@ -147,9 +141,7 @@ export const updateUserProfile = async (req, res) => {
       };
     }
 
-    // Handle image update
     if (imagePath) {
-      // Optionally remove the old image file if exists
       if (currentUser.image) {
         try {
           fs.unlinkSync(currentUser.image);
@@ -158,11 +150,9 @@ export const updateUserProfile = async (req, res) => {
         }
       }
 
-      // Save the new image path
       updatedFields.image = imagePath;
     }
 
-    // Update the user with the collected fields
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       { $set: updatedFields },
@@ -207,52 +197,11 @@ const storage = multer.diskStorage({
   },
 });
 
-// Initialize multer with storage
 export const upload = multer({ storage });
 
-// Controller function for updating profile image
-// export const updateProfileImage = async (req, res) => {
-//   const userId = req.userId;
-//   const imagePath = req.file ? req.file.path : null;
-
-//   console.log("Profile image update request received:");
-//   console.log("User ID:", userId);
-//   console.log("Uploaded File:", req.file);
-
-//   if (!userId) {
-//     return res.status(400).json({ message: "User ID is missing" });
-//   }
-
-//   if (!imagePath) {
-//     return res.status(400).json({ message: "Image file is required" });
-//   }
-
-//   try {
-//     // Update the image in DB
-//     const updatedUser = await User.findByIdAndUpdate(
-//       userId,
-//       { image: imagePath },
-//       { new: true }
-//     );
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     res.status(200).json({
-//       message: "Profile image updated successfully",
-//       user: updatedUser,
-//     });
-//   } catch (error) {
-//     console.error("Error updating profile image:", error);
-//     res.status(500).json({ message: "Server error", error: error.message });
-//   }
-// };
-
-// Endpoint to get matched users for the current user
 export const getMatchedUsers = async (req, res) => {
   try {
-    const matchedUsers = await findNearestNeighbors(req.userId, 6); // Top 5 users
+    const matchedUsers = await findNearestNeighbors(req.userId, 6);
     return res.status(200).json(matchedUsers);
   } catch (error) {
     return res

@@ -4,6 +4,7 @@ import User from "../models/userModel.js";
 import { getCoordinates } from "../utils/geoUtils.js";
 import multer from "multer";
 import fs from "fs";
+import path from "path";
 
 export const addRoom = async (req, res) => {
   const {
@@ -15,16 +16,27 @@ export const addRoom = async (req, res) => {
     deposit,
     description,
     location,
+    images,
   } = req.body;
 
-  // Handle images
-  const images = req.files ? req.files.map((file) => file.path) : [];
-
   try {
-    // Validate location
     const coordinates = await getCoordinates(location.name);
     if (!coordinates) {
       return res.status(400).json({ message: "Invalid location provided." });
+    }
+
+    const imagePaths = [];
+    if (images && images.length > 0) {
+      images.forEach((base64Image, index) => {
+        const buffer = Buffer.from(
+          base64Image.replace(/^data:image\/\w+;base64,/, ""),
+          "base64"
+        );
+        const fileName = `${Date.now()}-${index}.jpg`;
+        const filePath = path.join("./uploads/rooms", fileName);
+        fs.writeFileSync(filePath, buffer);
+        imagePaths.push(filePath);
+      });
     }
 
     const newRoom = new Room({
@@ -40,7 +52,7 @@ export const addRoom = async (req, res) => {
         name: location.name,
         coordinates,
       },
-      images, // Save image paths
+      images: imagePaths,
     });
 
     await newRoom.save();
@@ -63,7 +75,6 @@ const roomStorage = multer.diskStorage({
 });
 export const roomUpload = multer({ storage: roomStorage });
 
-// Fetch all rooms posted by the logged-in user
 export const getUserRooms = async (req, res) => {
   try {
     const rooms = await Room.find({ userId: req.userId });
@@ -99,12 +110,25 @@ export const updateRoom = async (req, res) => {
         .json({ message: "Unauthorized to update this room." });
     }
 
-    // Validate location
-    if (!location || !location.name || !location.coordinates) {
+    const coordinates = await getCoordinates(location.name);
+    if (!coordinates) {
       return res.status(400).json({ message: "Invalid location provided." });
     }
 
-    // Update room fields
+    const newImagePaths = [];
+    if (images && images.length > 0) {
+      images.forEach((base64Image, index) => {
+        const buffer = Buffer.from(
+          base64Image.replace(/^data:image\/\w+;base64,/, ""),
+          "base64"
+        );
+        const fileName = `${Date.now()}-${index}.jpg`;
+        const filePath = path.join("./uploads/rooms", fileName);
+        fs.writeFileSync(filePath, buffer);
+        newImagePaths.push(filePath);
+      });
+    }
+
     room.rent = rent;
     room.availableFrom = availableFrom;
     room.duration = duration;
@@ -112,8 +136,11 @@ export const updateRoom = async (req, res) => {
     room.layout = layout;
     room.deposit = deposit;
     room.description = description;
-    room.location = location;
-    room.images = images;
+    room.location = {
+      name: location.name,
+      coordinates,
+    };
+    room.images = [...room.images, ...newImagePaths];
 
     await room.save();
     return res.status(200).json({ message: "Room updated successfully", room });
@@ -123,11 +150,10 @@ export const updateRoom = async (req, res) => {
   }
 };
 
-// Delete a room listing
 export const deleteRoom = async (req, res) => {
   const { roomId } = req.params;
 
-  console.log("Room ID received:", roomId); // Log the roomId
+  console.log("Room ID received:", roomId);
 
   try {
     const room = await Room.findById(roomId);
@@ -147,13 +173,12 @@ export const deleteRoom = async (req, res) => {
         .json({ message: "Unauthorized to delete this room" });
     }
 
-    // Attempt to delete the room using findByIdAndDelete instead of remove
     await Room.findByIdAndDelete(roomId);
     console.log(`Room ${roomId} deleted successfully`);
 
     return res.status(200).json({ message: "Room deleted successfully" });
   } catch (error) {
-    console.error("Error deleting room:", error.message, error.stack); // Log the exact error
+    console.error("Error deleting room:", error.message, error.stack);
     return res.status(500).json({ message: "Error deleting room", error });
   }
 };
@@ -184,7 +209,7 @@ export const getPublicRooms = async (req, res) => {
 export const getMatchedRooms = async (req, res) => {
   try {
     const currentUser = await User.findById(req.userId);
-    const matchedRooms = await findNearestRooms(req.userId, 5); // Get top 5 rooms
+    const matchedRooms = await findNearestRooms(req.userId, 10);
 
     console.log(
       "Matched Rooms (sorted by geographic and income distance):",

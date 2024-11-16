@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../styles/Header.css"; // Keeping your existing styles
+import "../styles/Header.css";
 
 const MyProfile = () => {
   const [userData, setUserData] = useState({
@@ -25,11 +25,11 @@ const MyProfile = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState("");
-  const [canPostRoom, setCanPostRoom] = useState(false); // Switch for room post form
-  const [userPosts, setUserPosts] = useState([]); // User's room posts
-  const [activeTab, setActiveTab] = useState("profile"); // Tab state
-  const [isEditingRoom, setIsEditingRoom] = useState(false); // State for editing rooms
-  const [editRoomId, setEditRoomId] = useState(null); // Store the room ID to edit
+  const [canPostRoom, setCanPostRoom] = useState(false);
+  const [userPosts, setUserPosts] = useState([]);
+  const [activeTab, setActiveTab] = useState("profile");
+  const [isEditingRoom, setIsEditingRoom] = useState(false);
+  const [editRoomId, setEditRoomId] = useState(null);
   const [roomData, setRoomData] = useState({
     rent: "",
     availableFrom: "",
@@ -42,29 +42,6 @@ const MyProfile = () => {
     images: [],
   });
 
-  const fetchCoordinates = async (locationName) => {
-    try {
-      const { data } = await axios.get(
-        `https://api.opencagedata.com/geocode/v1/json`,
-        {
-          params: {
-            q: locationName,
-            key: "79bacffd88cd420f9496f5b88eb6266a",
-          },
-        }
-      );
-      if (data.results.length > 0) {
-        const { lat, lng } = data.results[0].geometry;
-        return { latitude: lat, longitude: lng };
-      }
-      return null; // Return null if no results are found
-    } catch (error) {
-      console.error("Error fetching coordinates:", error);
-      return null;
-    }
-  };
-
-  // Fetch user profile on load
   useEffect(() => {
     const token = sessionStorage.getItem("token");
     if (!token) {
@@ -83,7 +60,6 @@ const MyProfile = () => {
       );
   }, []);
 
-  // Fetch user's room posts when switching to "My Posts"
   useEffect(() => {
     if (activeTab === "posts") {
       const token = sessionStorage.getItem("token");
@@ -104,7 +80,6 @@ const MyProfile = () => {
     setSelectedImage(file);
   };
 
-  // Handle input changes for room post form
   const handleRoomChange = (e) => {
     const { name, value } = e.target;
     if (name === "location") {
@@ -120,7 +95,6 @@ const MyProfile = () => {
     }
   };
 
-  // Handle image upload
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
     setRoomData((prev) => ({ ...prev, images: files }));
@@ -128,49 +102,53 @@ const MyProfile = () => {
 
   const handleRoomSubmit = async (e) => {
     e.preventDefault();
+
     const token = sessionStorage.getItem("token");
 
-    try {
-      // Fetch coordinates for the location
-      const coordinates = await fetchCoordinates(roomData.location.name);
-      if (!coordinates) {
-        setMessage("Invalid room location. Please enter a valid location.");
-        return;
-      }
+    const newImages = roomData.images.filter((img) => img instanceof File);
+    const existingImages = roomData.images.filter(
+      (img) => typeof img === "string"
+    );
 
+    const imagesBase64 = await Promise.all(
+      newImages.map(
+        (image) =>
+          new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(image);
+          })
+      )
+    );
+
+    const payload = {
+      rent: roomData.rent,
+      availableFrom: roomData.availableFrom,
+      duration: roomData.duration,
+      type: roomData.type,
+      layout: roomData.layout,
+      deposit: roomData.deposit,
+      description: roomData.description,
+      location: roomData.location,
+      images: [...existingImages, ...imagesBase64],
+    };
+
+    try {
       const apiUrl = isEditingRoom
         ? `http://localhost:5555/api/rooms/update/${editRoomId}`
         : "http://localhost:5555/api/rooms/add";
 
-      // Prepare the room data as a JSON object
-      const roomPayload = {
-        rent: roomData.rent,
-        availableFrom: roomData.availableFrom,
-        duration: roomData.duration,
-        type: roomData.type,
-        layout: roomData.layout,
-        deposit: roomData.deposit,
-        description: roomData.description,
-        location: {
-          name: roomData.location.name,
-          coordinates: {
-            latitude: coordinates.latitude,
-            longitude: coordinates.longitude,
-          },
-        },
-        images: roomData.images.map((image) => image.name), // Use filenames for now
-      };
-
-      // Send room data to the server
-      const response = await axios.post(apiUrl, roomPayload, {
+      const response = await axios.post(apiUrl, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      // Handle success
+      console.log(response.data);
       setMessage(response.data.message);
+
       setRoomData({
         rent: "",
         availableFrom: "",
@@ -185,25 +163,23 @@ const MyProfile = () => {
         },
         images: [],
       });
-      setIsEditingRoom(false);
+      setCanPostRoom(false);
 
-      // Update room posts
-      if (isEditingRoom) {
-        setUserPosts((prev) =>
-          prev.map((room) =>
-            room._id === editRoomId ? response.data.room : room
-          )
-        );
-      } else {
-        setUserPosts((prev) => [...prev, response.data.room]);
+      if (activeTab === "posts") {
+        const { data } = await axios.get("http://localhost:5555/api/rooms", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setUserPosts(data.rooms);
       }
     } catch (error) {
-      console.error("Error posting room:", error.response?.data || error);
+      console.error(
+        "Error posting room:",
+        error.response?.data || error.message
+      );
       setMessage("Error posting room.");
     }
   };
 
-  // Handle profile edits (unchanged)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setUserData({ ...userData, [name]: value });
@@ -218,9 +194,9 @@ const MyProfile = () => {
 
     const formData = new FormData();
     formData.append("username", userData.username);
-    formData.append("location[name]", userData.location.name); // Nested object handling
+    formData.append("location[name]", userData.location.name);
     if (selectedImage) {
-      formData.append("image", selectedImage); // Include the selected image
+      formData.append("image", selectedImage);
     }
 
     try {
@@ -249,11 +225,11 @@ const MyProfile = () => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
-  // Edit an existing room
+
   const handleEditRoom = (room) => {
     setRoomData({
       rent: room.rent,
-      availableFrom: new Date(room.availableFrom).toISOString().substr(0, 10), // Format date for input
+      availableFrom: new Date(room.availableFrom).toISOString().substr(0, 10),
       duration: room.duration,
       type: room.type,
       layout: room.layout,
@@ -264,12 +240,10 @@ const MyProfile = () => {
     });
     setIsEditingRoom(true);
     setEditRoomId(room._id);
-    setCanPostRoom(true); // Show the form for editing
+    setCanPostRoom(true);
   };
 
-  // Delete a room post
   const handleDeleteRoom = (roomId) => {
-    console.log("Deleting room with ID:", roomId); // Log roomId
     const token = sessionStorage.getItem("token");
     axios
       .delete(`http://localhost:5555/api/rooms/delete/${roomId}`, {
@@ -277,10 +251,10 @@ const MyProfile = () => {
       })
       .then(() => {
         setMessage("Room deleted successfully.");
-        setUserPosts(userPosts.filter((room) => room._id !== roomId)); // Remove room from list
+        setUserPosts(userPosts.filter((room) => room._id !== roomId));
       })
       .catch((error) => {
-        console.error("Error deleting room:", error); // Log the error
+        console.error("Error deleting room:", error);
         setMessage("Error deleting room.");
       });
   };
@@ -288,7 +262,6 @@ const MyProfile = () => {
   return (
     <div className="min-h-screen flex justify-center items-center header">
       <div className="w-full max-w-7xl bg-white p-10 rounded-lg shadow-md m-2">
-        {/* Tab Navigation */}
         <div className="tabs mb-4">
           <button
             className={`p-2 ${
@@ -312,7 +285,6 @@ const MyProfile = () => {
           </button>
         </div>
 
-        {/* My Profile Section */}
         {activeTab === "profile" && (
           <div>
             <h3 className="text-3xl font-bold text-center text-blue-700 mb-6">
@@ -382,7 +354,6 @@ const MyProfile = () => {
                 </div>
               </div>
             ) : (
-              // Edit form similar to Register design
               <form
                 onSubmit={handleSubmit}
                 className="grid grid-cols-1 md:grid-cols-3 gap-6"
@@ -704,7 +675,14 @@ const MyProfile = () => {
                       className="card p-4 bg-gray-100 rounded shadow"
                     >
                       <img
-                        src={`http://localhost:5555${post.images[0]}`}
+                        src={
+                          post.images && post.images.length > 0
+                            ? `http://localhost:5555/${post.images[0].replace(
+                                /\\/g,
+                                "/"
+                              )}`
+                            : "/default-room.png"
+                        }
                         alt="Room"
                         className="w-full h-48 object-cover rounded mb-2"
                       />

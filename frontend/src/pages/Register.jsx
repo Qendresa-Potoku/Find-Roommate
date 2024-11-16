@@ -28,7 +28,7 @@ const Register = () => {
         {
           params: {
             q: locationName,
-            key: "79bacffd88cd420f9496f5b88eb6266a",
+            key: process.env.REACT_APP_OPENCAGE_API_KEY,
           },
         }
       );
@@ -62,7 +62,6 @@ const Register = () => {
   const submitHandler = async (event) => {
     event.preventDefault();
 
-    // Validation to ensure all required fields are filled
     if (
       name.trim() === "" ||
       email.trim() === "" ||
@@ -75,13 +74,12 @@ const Register = () => {
     }
 
     try {
-      // Fetch coordinates using OpenCage API
       const { data } = await axios.get(
         `https://api.opencagedata.com/geocode/v1/json`,
         {
           params: {
             q: userLocation,
-            key: "79bacffd88cd420f9496f5b88eb6266a",
+            key: process.env.REACT_APP_OPENCAGE_API_KEY,
           },
         }
       );
@@ -89,7 +87,6 @@ const Register = () => {
       if (data.results.length > 0) {
         const { lat, lng } = data.results[0].geometry;
 
-        // Construct the request body
         const requestBody = {
           name,
           email,
@@ -101,14 +98,12 @@ const Register = () => {
           },
         };
 
-        // Dynamically add form elements to the request body
         for (let ele of event.target.elements) {
           if (ele.name && !requestBody.hasOwnProperty(ele.name)) {
             requestBody[ele.name] = ele.value;
           }
         }
 
-        // Send the POST request
         const response = await axios.post(registerUrl, requestBody);
         console.log("Registration Response:", response.data);
         setMessage("Registration successful");
@@ -395,7 +390,7 @@ const Register = () => {
                   className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
                   required
                   value={userLocation}
-                  onChange={(event) => setUserLocation(event.target.value)} // Update userLocation
+                  onChange={(event) => setUserLocation(event.target.value)}
                 />
               </div>
 
