@@ -188,11 +188,11 @@ const Dashboard = () => {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {filteredRooms.map((room) => (
               <div
                 key={room._id}
-                className="border p-4 rounded-lg shadow-md bg-white"
+                className="border rounded-lg shadow-md bg-white"
               >
                 <img
                   src={
@@ -204,9 +204,9 @@ const Dashboard = () => {
                       : "/default-room.png"
                   }
                   alt="Room"
-                  className="w-40 h-40 object-cover rounded-md mb-4"
+                  className="w-full h-40 object-cover "
                 />
-                <div className="mb-4">
+                <div className="p-4">
                   <p className="text-xl font-bold">${room.rent} / mo</p>
                   <p>
                     <strong>Available:</strong>{" "}
