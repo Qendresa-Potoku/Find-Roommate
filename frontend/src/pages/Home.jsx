@@ -133,17 +133,17 @@ const Home = () => {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {rooms.map((room) => (
               <div
                 key={room._id}
-                className="border p-4 rounded-lg shadow-md bg-white relative"
+                className="border  rounded-lg shadow-md bg-white relative"
               >
                 <div className="relative">
                   <img
-                    src={room.images[0] || "/default-room.png"}
+                    src={room.images?.[0] || "/default-room.png"}
                     alt="Room"
-                    className={`w-40 h-40 object-cover rounded-md mb-4 ${
+                    className={`w-full h-40 object-cover  ${
                       user ? "" : "blur-sm"
                     }`}
                   />
@@ -155,7 +155,7 @@ const Home = () => {
                     </div>
                   )}
                 </div>
-                <div className="mb-4">
+                <div className="p-4">
                   <p className="text-xl font-bold">${room.rent} / mo</p>
                   <p>
                     <strong>Available:</strong>{" "}
@@ -171,7 +171,7 @@ const Home = () => {
                     <strong>Deposit:</strong> ${room.deposit}
                   </p>
                   <p>
-                    <strong>Location:</strong> {room.location}
+                    <strong>Location:</strong> {room.location?.name}
                   </p>
                 </div>
               </div>

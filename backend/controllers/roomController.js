@@ -197,7 +197,7 @@ export const getPublicRooms = async (req, res) => {
   try {
     const rooms = await Room.find(
       {},
-      "title location images rent type layout deposit "
+      "rent type layout deposit location.name location.coordinates images availableFrom"
     );
     return res.status(200).json({ rooms });
   } catch (error) {

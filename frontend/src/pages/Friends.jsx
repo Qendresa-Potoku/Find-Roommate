@@ -18,8 +18,6 @@ const Friends = () => {
 
   const fetchData = async () => {
     try {
-      console.log("Fetching data");
-
       const [friendReqs, friendsList] = await Promise.all([
         fetchFriendRequests(),
         fetchFriends(),
@@ -38,7 +36,6 @@ const Friends = () => {
       const token = sessionStorage.getItem("token");
       if (!token) return [];
 
-      console.log("Fetching friend requests");
       const response = await axios.get(
         "http://localhost:5555/api/auth/friends/requests",
         {
@@ -57,14 +54,12 @@ const Friends = () => {
       const token = sessionStorage.getItem("token");
       if (!token) return [];
 
-      console.log("Fetching friends");
       const response = await axios.get(
         "http://localhost:5555/api/auth/friends/list",
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Friends Response:", response.data);
 
       return response.data;
     } catch (error) {
