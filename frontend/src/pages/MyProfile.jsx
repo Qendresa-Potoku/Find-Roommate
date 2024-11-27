@@ -550,11 +550,11 @@ const MyProfile = () => {
                       className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
                       multiple
                     >
-                      <option value="asian">Asian</option>
-                      <option value="white">White</option>
-                      <option value="black">Black</option>
-                      <option value="hispanic">Hispanic/Latin</option>
-                      <option value="indian">Indian</option>
+                      <option value="albanian">Albanian</option>
+                      <option value="turk">Turk</option>
+                      <option value="romani">Romani</option>
+                      <option value="bosniaks">Bosniaks</option>
+                      <option value="serbs">Serbs</option>
                     </select>
                   </div>
 

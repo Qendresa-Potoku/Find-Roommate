@@ -28,7 +28,7 @@ const Register = () => {
         {
           params: {
             q: locationName,
-            key: process.env.REACT_APP_OPENCAGE_API_KEY,
+            key: import.meta.env.VITE_OPENCAGE_API_KEY,
           },
         }
       );
@@ -79,7 +79,7 @@ const Register = () => {
         {
           params: {
             q: userLocation,
-            key: process.env.REACT_APP_OPENCAGE_API_KEY,
+            key: import.meta.env.VITE_OPENCAGE_API_KEY,
           },
         }
       );
@@ -343,14 +343,11 @@ const Register = () => {
                   id="ethnicity"
                 >
                   <option>Select your ethnicity</option>
-                  <option value="asian">Asian</option>
-                  <option value="white">White</option>
-                  <option value="black">Black</option>
-                  <option value="hispanic/latin">Hispanic/Latino</option>
-                  <option value="indian">Indian</option>
-                  <option value="pacificislander">Pacific Islander</option>
-                  <option value="middleeastern">Middle Eastern</option>
-                  <option value="nativeamerican">Native American</option>
+                  <option value="albanian">Albanian</option>
+                  <option value="turk">Turk</option>
+                  <option value="romani">Romani</option>
+                  <option value="bosniaks">Bosniaks</option>
+                  <option value="serbs">Serbs</option>
                 </select>
               </div>
 
