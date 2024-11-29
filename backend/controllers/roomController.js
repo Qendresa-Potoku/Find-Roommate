@@ -208,17 +208,9 @@ export const getPublicRooms = async (req, res) => {
 
 export const getMatchedRooms = async (req, res) => {
   try {
-    const currentUser = await User.findById(req.userId);
-    const matchedRooms = await findNearestRooms(req.userId, 10);
-
-    console.log(
-      "Matched Rooms (sorted by geographic and income distance):",
-      matchedRooms
-    );
-
+    const matchedRooms = await findNearestRooms(req.userId, 6);
     return res.status(200).json(matchedRooms);
   } catch (error) {
-    console.error("Error fetching matched rooms:", error);
     return res
       .status(500)
       .json({ message: "Server error", error: error.message });
