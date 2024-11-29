@@ -3,7 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { buildResponse } from "../utils/util.js";
 import multer from "multer";
-import { findNearestNeighbors } from "../utils/knnMatcher.js";
+import { findNearestUsers } from "../utils/knnMatcher.js";
 import { getCoordinates } from "../utils/geoUtils.js";
 import fs from "fs";
 
@@ -201,8 +201,13 @@ export const upload = multer({ storage });
 
 export const getMatchedUsers = async (req, res) => {
   try {
-    const matchedUsers = await findNearestNeighbors(req.userId, 6);
-    return res.status(200).json(matchedUsers);
+    const matchedUsers = await findNearestUsers(req.userId, 10);
+
+    const plainUsers = matchedUsers.map((user) =>
+      user.toObject ? user.toObject() : user
+    );
+
+    return res.status(200).json(plainUsers);
   } catch (error) {
     return res
       .status(500)

@@ -33,9 +33,15 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      const filteredUsers = response.data.filter(
-        (userItem) => userItem._id !== user.id
-      );
+
+      const filteredUsers = response.data
+        .filter((userItem) => userItem._id !== user.id)
+        .map((userItem) => ({
+          _id: userItem._id,
+          name: userItem.name,
+          email: userItem.email,
+          image: userItem.image || userItem.profilePic || null,
+        }));
 
       setUsers(filteredUsers);
     } catch (error) {
