@@ -81,8 +81,10 @@ const Dashboard = () => {
 
       setRooms(response.data);
     } catch (error) {
-      console.error("Error fetching rooms:", error);
-      setMessage("Error fetching rooms.");
+      console.error("Error fetching rooms:", error.response || error);
+      setMessage(
+        error.response?.data?.message || "Error fetching rooms from server."
+      );
     }
   };
 
