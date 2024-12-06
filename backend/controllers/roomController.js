@@ -208,7 +208,7 @@ export const getPublicRooms = async (req, res) => {
 
 export const getMatchedRooms = async (req, res) => {
   try {
-    const matchedRooms = await findNearestRooms(req.userId, 6);
+    const matchedRooms = await findNearestRooms(req.userId);
     return res.status(200).json(matchedRooms);
   } catch (error) {
     return res

@@ -1,17 +1,25 @@
 import User from "../models/userModel.js";
 import Room from "../models/roomModel.js";
 
+function normalize(value, min, max) {
+  if (max === min) return 0;
+  return (value - min) / (max - min);
+}
+
 function preprocessUser(user) {
   return {
     ...user,
     gender: user.gender === "male" ? 0 : 1,
-    orientation:
+    orientation: normalize(
       user.orientation === "straight"
         ? 0
         : user.orientation === "bisexual"
         ? 1
         : 2,
-    ethnicity:
+      0,
+      2
+    ),
+    ethnicity: normalize(
       user.ethnicity === "albanian"
         ? 0
         : user.ethnicity === "turk"
@@ -21,8 +29,23 @@ function preprocessUser(user) {
         : user.ethnicity === "bosniak"
         ? 3
         : 4,
-    smokes: user.smokes === "yes" ? 0 : user.smokes === "no" ? 1 : 2,
-    drinks: user.drinks === "socially" ? 0 : user.drinks === "often" ? 1 : 2,
+      0,
+      4
+    ),
+    smokes: normalize(
+      user.smokes === "yes" ? 0 : user.smokes === "no" ? 1 : 2,
+      0,
+      2
+    ),
+    drinks: normalize(
+      user.drinks === "socially" ? 0 : user.drinks === "often" ? 1 : 2,
+      0,
+      2
+    ),
+    income: user.income,
+    location: user.location,
+    _id: user._id,
+    name: user.name,
   };
 }
 
@@ -40,7 +63,7 @@ function haversineDistance(coord1, coord2) {
   return R * c;
 }
 
-function calculateUserDistance(user1, user2, weights) {
+function calculateUserDistance(user1, user2, weights, maxLocationDistance) {
   let distance = 0;
 
   const attributes = [
@@ -68,45 +91,28 @@ function calculateUserDistance(user1, user2, weights) {
       user1.location.coordinates,
       user2.location.coordinates
     );
-    distance += Math.pow(weights.location * locDist, 2);
-  }
-
-  return Math.sqrt(distance);
-}
-
-function calculateRoomDistance(user, room, weights) {
-  let distance = 0;
-
-  if (user.income !== undefined && room.rent !== undefined) {
-    distance += weights.rent * Math.pow(user.income - room.rent, 2);
-  }
-
-  if (
-    user.location &&
-    room.location &&
-    user.location.coordinates &&
-    room.location.coordinates
-  ) {
-    const locDist = haversineDistance(
-      user.location.coordinates,
-      room.location.coordinates
+    console.log(
+      `Distance between ${user1.location.name} (${user1.location?.coordinates}) ` +
+        `and ${user2.location.name} (${user2.location?.coordinates}): ${locDist}`
     );
-    distance += weights.location * locDist;
+
+    const normalizedLocDist = normalize(locDist, 0, maxLocationDistance);
+    distance += Math.pow(weights.location * normalizedLocDist, 2);
   }
 
   return Math.sqrt(distance);
 }
 
-export async function findNearestUsers(targetUserId, k = 5) {
+export async function findNearestUsers(targetUserId, k = null) {
   const weights = {
-    age: 0.5,
-    gender: 1,
-    orientation: 0.3,
-    ethnicity: 0.3,
-    income: 0.5,
-    location: 2,
-    smokes: 0.2,
-    drinks: 0.2,
+    age: 0.0467,
+    gender: 0.1869,
+    orientation: 0.028,
+    ethnicity: 0.028,
+    income: 0.1121,
+    location: 1.9607,
+    smokes: 0.0187,
+    drinks: 0.0187,
   };
 
   const targetUser = preprocessUser(await User.findById(targetUserId).lean());
@@ -114,29 +120,125 @@ export async function findNearestUsers(targetUserId, k = 5) {
     preprocessUser
   );
 
+  const ages = allUsers.map((u) => u.age).concat(targetUser.age);
+  const incomes = allUsers.map((u) => u.income).concat(targetUser.income);
+  const ageMin = Math.min(...ages);
+  const ageMax = Math.max(...ages);
+  const incomeMin = Math.min(...incomes);
+  const incomeMax = Math.max(...incomes);
+
+  allUsers.forEach((u) => {
+    u.age = normalize(u.age, ageMin, ageMax);
+    u.income = normalize(u.income, incomeMin, incomeMax);
+  });
+  targetUser.age = normalize(targetUser.age, ageMin, ageMax);
+  targetUser.income = normalize(targetUser.income, incomeMin, incomeMax);
+
+  const allCoordinates = allUsers
+    .map((u) => u.location?.coordinates)
+    .concat(targetUser.location?.coordinates);
+  const maxLocationDistance = Math.max(
+    ...allCoordinates.flatMap((coord1) =>
+      allCoordinates.map((coord2) =>
+        coord1 && coord2 ? haversineDistance(coord1, coord2) : 0
+      )
+    )
+  );
+
   const distances = allUsers.map((user) => ({
     user,
-    distance: calculateUserDistance(targetUser, user, weights),
+    distance: calculateUserDistance(
+      targetUser,
+      user,
+      weights,
+      maxLocationDistance
+    ),
   }));
 
   distances.sort((a, b) => a.distance - b.distance);
-  return distances.slice(0, k).map((entry) => entry.user);
+
+  console.log("Sorted Distances:");
+  distances.forEach((entry) => {
+    console.log(
+      `Name: ${entry.user.name} (${entry.user._id}) | Location: ${entry.user.location?.name} | Distance: ${entry.distance}`
+    );
+  });
+
+  return distances.map((entry) => entry.user);
 }
 
-export async function findNearestRooms(targetUserId, k = 5) {
+export async function findNearestRooms(targetUserId, k = null) {
   const weights = {
-    rent: 1,
-    location: 2,
+    rent: 0.4,
+    location: 0.6,
   };
 
-  const targetUser = preprocessUser(await User.findById(targetUserId));
-  const allRooms = await Room.find({});
+  try {
+    const targetUser = preprocessUser(await User.findById(targetUserId));
+    if (!targetUser?.location?.coordinates) {
+      console.warn(
+        `Target user (${targetUserId}) has invalid or missing location.`
+      );
+      return [];
+    }
 
-  const distances = allRooms.map((room) => ({
-    room,
-    distance: calculateRoomDistance(targetUser, room, weights),
-  }));
+    targetUser.income = Number(targetUser.income);
+    const allRooms = await Room.find({ userId: { $ne: targetUserId } });
+    if (!allRooms.length) {
+      throw new Error("No rooms found in the database.");
+    }
 
-  distances.sort((a, b) => a.distance - b.distance);
-  return distances.slice(0, k).map((entry) => entry.room);
+    const rents = allRooms.map((room) => Number(room.rent));
+    const rentMin = Math.min(...rents);
+    const rentMax = Math.max(...rents);
+
+    const locations = allRooms
+      .map((room) => room.location?.coordinates)
+      .concat(targetUser.location.coordinates);
+    const maxLocationDistance = Math.max(
+      ...locations.flatMap((coord1) =>
+        locations.map((coord2) =>
+          coord1 && coord2 ? haversineDistance(coord1, coord2) : 0
+        )
+      )
+    );
+
+    const distances = allRooms.map((room) => {
+      const roomRent = Number(room.rent);
+      const rentDiff = Math.abs(targetUser.income - roomRent);
+      const normalizedRentDiff = normalize(rentDiff, 0, rentMax - rentMin);
+
+      const locDist = haversineDistance(
+        targetUser.location.coordinates,
+        room.location?.coordinates
+      );
+      const normalizedLocDist = normalize(locDist, 0, maxLocationDistance);
+
+      const distance =
+        weights.rent * normalizedRentDiff +
+        weights.location * normalizedLocDist;
+
+      console.log(
+        `Room ID: ${room._id}, Rent: ${roomRent}, Location: ${room.location?.name}, ` +
+          `Normalized Rent Diff: ${normalizedRentDiff}, Normalized Location Distance: ${normalizedLocDist}, ` +
+          `Final Weighted Distance: ${distance}`
+      );
+
+      return { room, distance };
+    });
+
+    distances.sort((a, b) => a.distance - b.distance);
+
+    console.log("Sorted Rooms by Distance:");
+    distances.forEach((entry) =>
+      console.log(
+        `Room ID: ${entry.room._id}, Rent: ${entry.room.rent}, Location: ${entry.room.location?.name}, Distance: ${entry.distance}`
+      )
+    );
+
+    return distances.slice(0, k || distances.length).map((entry) => entry.room);
+  } catch (error) {
+    console.error("Error in findNearestRooms:", error.message);
+    throw error;
+  }
 }
