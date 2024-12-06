@@ -17,7 +17,8 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(cors({ origin: "http://localhost:5173" }));
 
-app.use(bodyParser.json());
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ limit: "10mb", extended: true }));
 
 // Routes
 app.use("/api/auth", authRoutes);

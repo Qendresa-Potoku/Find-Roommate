@@ -201,7 +201,7 @@ export const upload = multer({ storage });
 
 export const getMatchedUsers = async (req, res) => {
   try {
-    const matchedUsers = await findNearestUsers(req.userId, 10);
+    const matchedUsers = await findNearestUsers(req.userId);
 
     const plainUsers = matchedUsers.map((user) =>
       user.toObject ? user.toObject() : user

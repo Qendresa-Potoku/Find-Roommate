@@ -110,7 +110,7 @@ export async function findNearestUsers(targetUserId, k = null) {
     orientation: 0.028,
     ethnicity: 0.028,
     income: 0.1121,
-    location: 0.9607,
+    location: 1.9607,
     smokes: 0.0187,
     drinks: 0.0187,
   };
@@ -183,8 +183,7 @@ export async function findNearestRooms(targetUserId, k = null) {
     }
 
     targetUser.income = Number(targetUser.income);
-
-    const allRooms = await Room.find({});
+    const allRooms = await Room.find({ userId: { $ne: targetUserId } });
     if (!allRooms.length) {
       throw new Error("No rooms found in the database.");
     }

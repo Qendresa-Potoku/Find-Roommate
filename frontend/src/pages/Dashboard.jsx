@@ -12,6 +12,33 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const user = getUser();
   const navigate = useNavigate();
+  const [currentPage, setCurrentPage] = useState(1);
+  const usersPerPage = 16;
+  const [currentRoomPage, setCurrentRoomPage] = useState(1);
+  const itemsPerPage = 12;
+
+  const indexOfLastUser = currentPage * usersPerPage;
+  const indexOfFirstUser = indexOfLastUser - usersPerPage;
+  const currentUsers = users
+    .filter((userItem) =>
+      userItem.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+    .slice(indexOfFirstUser, indexOfLastUser);
+
+  const totalPages = Math.ceil(users.length / usersPerPage);
+  const indexOfLastRoom = currentRoomPage * itemsPerPage;
+  const indexOfFirstRoom = indexOfLastRoom - itemsPerPage;
+  const currentRooms = rooms
+    .filter((room) => {
+      const locationName =
+        typeof room.location === "string"
+          ? room.location
+          : room.location?.name || "";
+      return locationName.toLowerCase().includes(searchQuery.toLowerCase());
+    })
+    .slice(indexOfFirstRoom, indexOfLastRoom);
+
+  const totalRoomPages = Math.ceil(rooms.length / itemsPerPage);
 
   useEffect(() => {
     if (user) {
@@ -161,8 +188,9 @@ const Dashboard = () => {
       {/* Conditionally render Renters or Rooms */}
       {activeView === "renters" ? (
         <div>
+          {/* Users Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredUsers.map((userItem) => (
+            {currentUsers.map((userItem) => (
               <div
                 key={userItem._id}
                 className="border p-4 rounded-lg shadow-md flex items-center w-[300px] h-[120px]"
@@ -193,11 +221,28 @@ const Dashboard = () => {
               </div>
             ))}
           </div>
+
+          {/* Pagination Controls */}
+          <div className="flex justify-center items-center mt-4">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                className={`px-4 py-2 mx-1 rounded ${
+                  page === currentPage
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-200 text-gray-700"
+                }`}
+                onClick={() => setCurrentPage(page)}
+              >
+                {page}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {filteredRooms.map((room) => (
+            {currentRooms.map((room) => (
               <div
                 key={room._id}
                 className="border rounded-lg shadow-md bg-white"
@@ -235,6 +280,23 @@ const Dashboard = () => {
                 </div>
               </div>
             ))}
+          </div>
+          <div className="flex justify-center items-center mt-4">
+            {Array.from({ length: totalRoomPages }, (_, i) => i + 1).map(
+              (page) => (
+                <button
+                  key={page}
+                  className={`px-4 py-2 mx-1 rounded ${
+                    page === currentRoomPage
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                  onClick={() => setCurrentRoomPage(page)}
+                >
+                  {page}
+                </button>
+              )
+            )}
           </div>
         </div>
       )}
