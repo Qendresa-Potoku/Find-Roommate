@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getUser } from "../services/AuthServices";
 
@@ -6,9 +7,9 @@ const Friends = () => {
   const [tab, setTab] = useState("friends");
   const [friendRequests, setFriendRequests] = useState([]);
   const [friends, setFriends] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]);
   const [message, setMessage] = useState("");
   const user = getUser();
+  const navigate = useNavigate(); // Added navigate hook
 
   useEffect(() => {
     if (user) {
@@ -102,7 +103,7 @@ const Friends = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold">Friends and Requests</h1>
+      <h1 className="text-2xl font-bold mb-4">Friends and Requests</h1>
 
       {/* Tab Navigation */}
       <div className="flex mb-4">
@@ -136,21 +137,24 @@ const Friends = () => {
               friends.map((friend) => (
                 <li
                   key={friend._id}
-                  className="border p-4 rounded-lg shadow-md flex justify-between"
+                  className="border p-4 rounded-lg shadow-md flex items-center justify-between w-1/2 mb-4"
                 >
-                  {friend.image && (
-                    <img
-                      src={`http://localhost:5555/${
-                        friend.image || "uploads/default-profile.png"
-                      }`}
-                      alt="Friend"
-                      className="rounded-full w-12 h-12 mr-4"
-                    />
-                  )}
-                  <p>
-                    {friend.name} ({friend.username})
-                  </p>
-                  <button className="bg-green-500 text-white py-1 px-4 rounded">
+                  <div className="flex items-center">
+                    {friend.image && (
+                      <img
+                        src={`http://localhost:5555/${
+                          friend.image || "uploads/default-profile.png"
+                        }`}
+                        alt="Friend"
+                        className="rounded-full w-12 h-12 mr-4"
+                      />
+                    )}
+                    <p className="text-lg font-medium">{friend.name}</p>
+                  </div>
+                  <button
+                    onClick={() => navigate(`/chats/${friend._id}`)}
+                    className="bg-green-500 text-white py-1 px-4 rounded text-sm"
+                  >
                     Chat
                   </button>
                 </li>
@@ -171,20 +175,20 @@ const Friends = () => {
               friendRequests.map((request) => (
                 <li
                   key={request._id}
-                  className="border p-4 rounded-lg shadow-md flex justify-between"
+                  className="border p-4 rounded-lg shadow-md flex items-center justify-between w-1/2 mb-4"
                 >
-                  {request.image && (
-                    <img
-                      src={`http://localhost:5555/${
-                        request.image || "uploads/default-profile.png"
-                      }`}
-                      alt="Request"
-                      className="rounded-full w-12 h-12 mr-4"
-                    />
-                  )}
-                  <p>
-                    {request.name} ({request.username})
-                  </p>
+                  <div className="flex items-center">
+                    {request.image && (
+                      <img
+                        src={`http://localhost:5555/${
+                          request.image || "uploads/default-profile.png"
+                        }`}
+                        alt="Friend"
+                        className="rounded-full w-12 h-12 mr-4"
+                      />
+                    )}
+                    <p className="text-lg font-medium">{request.name}</p>
+                  </div>
                   <div>
                     <button
                       onClick={() => acceptFriendRequest(request._id)}

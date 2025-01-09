@@ -45,6 +45,9 @@ const Header = () => {
               <Link to="/my-profile" className="hover:text-blue-300">
                 My Profile
               </Link>
+              <Link to="/chats" className="hover:text-blue-300">
+                Chats
+              </Link>
               <button
                 onClick={handleLogout}
                 className="bg-blue-700 hover:bg-blue-900 text-white py-2 px-4 rounded"

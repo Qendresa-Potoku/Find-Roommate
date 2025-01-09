@@ -209,7 +209,14 @@ const Dashboard = () => {
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{userItem.name}</p>
                   <p className="text-gray-600 text-sm">{userItem.email}</p>
-                  {!friends.includes(userItem._id) && (
+                  {friends.includes(userItem._id) ? (
+                    <button
+                      onClick={() => navigate(`/chats/${userItem._id}`)}
+                      className="mt-2 bg-green-500 text-white py-1 px-4 rounded text-sm"
+                    >
+                      Chat
+                    </button>
+                  ) : (
                     <button
                       onClick={() => sendFriendRequest(userItem._id)}
                       className="mt-2 bg-blue-500 text-white py-1 px-4 rounded text-sm"

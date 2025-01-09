@@ -58,7 +58,7 @@ router.get("/friends/requests", verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate(
       "friendRequests",
-      "name username"
+      "name username image"
     );
     if (!user) {
       return res.status(404).json({ message: "User not found" });
