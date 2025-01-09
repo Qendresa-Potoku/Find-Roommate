@@ -8,12 +8,13 @@ import Dashboard from "./pages/Dashboard";
 import Friends from "./pages/Friends";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import Chats from "./pages/Chats";
 
 const App = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
-      <div className="flex-grow ">
+      <div className="flex-grow">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -21,6 +22,8 @@ const App = () => {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/my-profile" element={<MyProfile />} />
+          <Route path="/chats" element={<Chats />} />
+          <Route path="/chats/:friendId" element={<Chats />} />{" "}
         </Routes>
       </div>
       <Footer />
