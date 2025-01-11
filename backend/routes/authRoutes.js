@@ -7,6 +7,7 @@ import {
   updateUserProfile,
   getUserProfile,
   getMatchedUsers,
+  getUserById,
 } from "../controllers/authController.js";
 import { verifyToken } from "../utils/auth.js";
 import User from "../models/userModel.js";
@@ -149,5 +150,6 @@ router.get("/friends/list", verifyToken, async (req, res) => {
 });
 
 router.get("/matches/users", verifyToken, getMatchedUsers);
+router.get("/user/:id", getUserById);
 
 export default router;

@@ -9,6 +9,7 @@ import Friends from "./pages/Friends";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import Chats from "./pages/Chats";
+import UserProfile from "./pages/UserProfile";
 
 const App = () => {
   return (
@@ -24,6 +25,7 @@ const App = () => {
           <Route path="/my-profile" element={<MyProfile />} />
           <Route path="/chats" element={<Chats />} />
           <Route path="/chats/:friendId" element={<Chats />} />{" "}
+          <Route path="/profile/:id" element={<UserProfile />} />;
         </Routes>
       </div>
       <Footer />

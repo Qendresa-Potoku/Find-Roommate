@@ -216,3 +216,12 @@ export const getMatchedRooms = async (req, res) => {
       .json({ message: "Server error", error: error.message });
   }
 };
+export const getRoomsByUser = async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const rooms = await Room.find({ userId });
+    res.status(200).json({ rooms });
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching user's rooms", error });
+  }
+};

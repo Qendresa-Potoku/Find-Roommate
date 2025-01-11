@@ -189,12 +189,17 @@ const Dashboard = () => {
       {activeView === "renters" ? (
         <div>
           {/* Users Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {currentUsers.map((userItem) => (
               <div
                 key={userItem._id}
-                className="border p-4 rounded-lg shadow-md flex items-center w-[300px] h-[120px]"
+                className="relative border p-4 rounded-2xl shadow-md flex items-center w-[300px] h-[120px] cursor-pointer transition-all duration-[480ms] ease-[cubic-bezier(0.23,1,0.32,1)] transform hover:translate-y-[-16px] group"
+                onClick={() => navigate(`/profile/${userItem._id}`)}
               >
+                {/* Pseudo-elements for hover effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gray-200 z-[-1] before:absolute before:inset-[-4%] before:bg-[#d5ddfd] before:rounded before:z-[-1] before:transition-all before:duration-[480ms] before:ease-[cubic-bezier(0.23,1,0.32,1)] before:group-hover:rotate-[-8deg] before:group-hover:w-full before:group-hover:h-full after:absolute after:inset-[-8%] after:bg-[#e7ecff] after:rounded after:z-[-2] after:transition-all after:duration-[480ms] after:ease-[cubic-bezier(0.23,1,0.32,1)] after:group-hover:rotate-[8deg] after:group-hover:w-full after:group-hover:h-full"></div>
+
+                {/* User Image */}
                 <div className="flex-shrink-0">
                   {userItem.image ? (
                     <img
@@ -206,20 +211,35 @@ const Dashboard = () => {
                     <div className="rounded-full w-16 h-16 bg-gray-200 mr-4"></div>
                   )}
                 </div>
+
+                {/* User Info */}
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{userItem.name}</p>
-                  <p className="text-gray-600 text-sm">{userItem.email}</p>
                   {friends.includes(userItem._id) ? (
                     <button
-                      onClick={() => navigate(`/chats/${userItem._id}`)}
-                      className="mt-2 bg-green-500 text-white py-1 px-4 rounded text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/chats/${userItem._id}`);
+                      }}
+                      className="mt-2 py-1 px-4 rounded-lg text-sm  font-semibold transition-all duration-300"
+                      style={{
+                        background:
+                          "linear-gradient(to right, rgba(0, 128, 0, 0), green)",
+                      }}
                     >
                       Chat
                     </button>
                   ) : (
                     <button
-                      onClick={() => sendFriendRequest(userItem._id)}
-                      className="mt-2 bg-blue-500 text-white py-1 px-4 rounded text-sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        sendFriendRequest(userItem._id);
+                      }}
+                      className="mt-2 py-1 px-4 rounded-lg text-sm  font-semibold transition-all duration-300"
+                      style={{
+                        background:
+                          "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))",
+                      }}
                     >
                       Add Friend
                     </button>
