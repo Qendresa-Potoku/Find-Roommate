@@ -8,6 +8,7 @@ import {
   getPublicRooms,
   getMatchedRooms,
   getRoomsByUser,
+  getRoomDetails,
 } from "../controllers/roomController.js";
 import { verifyToken } from "../utils/auth.js";
 import { roomUpload } from "../controllers/roomController.js";
@@ -33,5 +34,6 @@ router.get("/public-rooms", getPublicRooms);
 
 router.get("/matches/rooms", verifyToken, getMatchedRooms);
 router.get("/user/:userId", getRoomsByUser);
+router.get("/:roomId", getRoomDetails);
 
 export default router;

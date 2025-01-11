@@ -225,3 +225,21 @@ export const getRoomsByUser = async (req, res) => {
     res.status(500).json({ message: "Error fetching user's rooms", error });
   }
 };
+export const getRoomDetails = async (req, res) => {
+  const { roomId } = req.params;
+
+  try {
+    const room = await Room.findById(roomId).populate(
+      "userId",
+      "name email image"
+    );
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    res.status(200).json(room);
+  } catch (error) {
+    console.error("Error fetching room details:", error);
+    res.status(500).json({ message: "Error fetching room details", error });
+  }
+};

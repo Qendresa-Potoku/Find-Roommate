@@ -16,6 +16,9 @@ const Dashboard = () => {
   const usersPerPage = 16;
   const [currentRoomPage, setCurrentRoomPage] = useState(1);
   const itemsPerPage = 12;
+  const [popupVisible, setPopupVisible] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+  const [sentRequests, setSentRequests] = useState([]);
 
   const indexOfLastUser = currentPage * usersPerPage;
   const indexOfFirstUser = indexOfLastUser - usersPerPage;
@@ -116,6 +119,13 @@ const Dashboard = () => {
   };
 
   const sendFriendRequest = async (recipientId) => {
+    if (sentRequests.includes(recipientId)) {
+      setPopupMessage("You already sent a Friend Request!");
+      setPopupVisible(true);
+      setTimeout(() => setPopupVisible(false), 3000);
+      return;
+    }
+
     try {
       const token = sessionStorage.getItem("token");
       if (!token) return;
@@ -125,9 +135,18 @@ const Dashboard = () => {
         { recipientId },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setMessage(response.data.message);
+
+      setSentRequests((prevRequests) => [...prevRequests, recipientId]);
+
+      setPopupMessage("Friend Request sent successfully!");
+      setPopupVisible(true);
+      setTimeout(() => setPopupVisible(false), 3000);
     } catch (error) {
-      setMessage("Error sending friend request.");
+      const errorMessage =
+        error.response?.data?.message || "Error sending Friend Request.";
+      setPopupMessage(errorMessage);
+      setPopupVisible(true);
+      setTimeout(() => setPopupVisible(false), 3000);
     }
   };
 
@@ -188,16 +207,26 @@ const Dashboard = () => {
       {/* Conditionally render Renters or Rooms */}
       {activeView === "renters" ? (
         <div>
+          <div
+            className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ${
+              popupVisible ? "opacity-100 visible z-50" : "opacity-0 invisible"
+            }`}
+          >
+            <div className="bg-white text-black py-4 px-6 rounded-lg shadow-lg text-center">
+              <p className="text-lg font-semibold">{popupMessage}</p>
+            </div>
+          </div>
+
           {/* Users Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
             {currentUsers.map((userItem) => (
               <div
                 key={userItem._id}
-                className="relative border p-4 rounded-2xl shadow-md flex items-center w-[300px] h-[120px] cursor-pointer transition-all duration-[480ms] ease-[cubic-bezier(0.23,1,0.32,1)] transform hover:translate-y-[-16px] group"
+                className="relative border p-4 rounded-2xl shadow-md flex items-center w-[300px] h-[120px] cursor-pointer transition-all duration-[480ms] ease-[cubic-bezier(0.23,1,0.32,1)] transform hover:translate-y-[-8px] group"
                 onClick={() => navigate(`/profile/${userItem._id}`)}
               >
-                {/* Pseudo-elements for hover effect */}
-                <div className="absolute inset-0 rounded-2xl bg-gray-200 z-[-1] before:absolute before:inset-[-4%] before:bg-[#d5ddfd] before:rounded before:z-[-1] before:transition-all before:duration-[480ms] before:ease-[cubic-bezier(0.23,1,0.32,1)] before:group-hover:rotate-[-8deg] before:group-hover:w-full before:group-hover:h-full after:absolute after:inset-[-8%] after:bg-[#e7ecff] after:rounded after:z-[-2] after:transition-all after:duration-[480ms] after:ease-[cubic-bezier(0.23,1,0.32,1)] after:group-hover:rotate-[8deg] after:group-hover:w-full after:group-hover:h-full"></div>
+                {/* Subtle Layer Effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gray-100 z-[-1] group-hover:scale-105 group-hover:bg-gray-200 transition-all duration-500"></div>
 
                 {/* User Image */}
                 <div className="flex-shrink-0">
@@ -221,7 +250,7 @@ const Dashboard = () => {
                         e.stopPropagation();
                         navigate(`/chats/${userItem._id}`);
                       }}
-                      className="mt-2 py-1 px-4 rounded-lg text-sm  font-semibold transition-all duration-300"
+                      className="mt-2 py-1 px-4 rounded-lg text-sm font-semibold transition-all duration-300"
                       style={{
                         background:
                           "linear-gradient(to right, rgba(0, 128, 0, 0), green)",
@@ -235,7 +264,7 @@ const Dashboard = () => {
                         e.stopPropagation();
                         sendFriendRequest(userItem._id);
                       }}
-                      className="mt-2 py-1 px-4 rounded-lg text-sm  font-semibold transition-all duration-300"
+                      className="mt-2 py-1 px-4 rounded-lg text-sm font-semibold transition-all duration-300"
                       style={{
                         background:
                           "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))",
@@ -254,11 +283,16 @@ const Dashboard = () => {
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
               <button
                 key={page}
-                className={`px-4 py-2 mx-1 rounded ${
-                  page === currentPage
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-700"
+                className={`px-4 py-2 mx-1 rounded text-sm font-semibold transition-all duration-300 ${
+                  page === currentPage ? "text-white" : "text-gray-700"
                 }`}
+                style={{
+                  background:
+                    page === currentPage
+                      ? "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))"
+                      : "rgba(240, 240, 240, 1)",
+                  color: page === currentPage ? "white" : "black",
+                }}
                 onClick={() => setCurrentPage(page)}
               >
                 {page}
@@ -268,56 +302,73 @@ const Dashboard = () => {
         </div>
       ) : (
         <div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex flex-wrap justify-center gap-10 px-6">
             {currentRooms.map((room) => (
               <div
                 key={room._id}
-                className="border rounded-lg shadow-md bg-white"
+                className="relative w-[320px] bg-white border cursor-pointer rounded-2xl shadow-lg p-4 transition-all duration-500 hover:shadow-xl hover:translate-y-[-8px] group"
+                onClick={() => navigate(`/room/${room._id}`)}
               >
-                <img
-                  src={
-                    room.images && room.images.length > 0
-                      ? `http://localhost:5555/${room.images[0].replace(
-                          /\\/g,
-                          "/"
-                        )}`
-                      : "/default-room.png"
-                  }
-                  alt="Room"
-                  className="w-full h-40 object-cover "
-                />
-                <div className="p-4">
-                  <p className="text-xl font-bold">${room.rent} / mo</p>
-                  <p>
+                {/* Subtle Layer Effect */}
+                <div className="absolute inset-0 rounded-2xl bg-gray-100 z-[-1] group-hover:scale-105 group-hover:bg-gray-200 transition-all duration-500"></div>
+
+                {/* Room Image */}
+                <div className="rounded-lg overflow-hidden mb-4">
+                  <img
+                    src={
+                      room.images && room.images.length > 0
+                        ? `http://localhost:5555/${room.images[0].replace(
+                            /\\/g,
+                            "/"
+                          )}`
+                        : "/default-room.png"
+                    }
+                    alt="Room"
+                    className="w-full h-40 object-cover"
+                  />
+                </div>
+
+                {/* Room Info */}
+                <div className="space-y-2">
+                  <p className="font-bold text-xl text-gray-800">
+                    ${room.rent} / mo
+                  </p>
+                  <p className="text-sm text-gray-600">
                     <strong>Available:</strong>{" "}
                     {new Date(room.availableFrom).toLocaleDateString()}
                   </p>
-                  <p>
+                  <p className="text-sm text-gray-600">
                     <strong>Type:</strong> {room.type}
                   </p>
-                  <p>
+                  <p className="text-sm text-gray-600">
                     <strong>Layout:</strong> {room.layout}
                   </p>
-                  <p>
+                  <p className="text-sm text-gray-600">
                     <strong>Deposit:</strong> ${room.deposit}
                   </p>
-                  <p>
+                  <p className="text-sm text-gray-600">
                     <strong>Location:</strong> {room.location?.name}
                   </p>
                 </div>
               </div>
             ))}
           </div>
+
           <div className="flex justify-center items-center mt-4">
             {Array.from({ length: totalRoomPages }, (_, i) => i + 1).map(
               (page) => (
                 <button
                   key={page}
-                  className={`px-4 py-2 mx-1 rounded ${
-                    page === currentRoomPage
-                      ? "bg-blue-500 text-white"
-                      : "bg-gray-200 text-gray-700"
+                  className={`px-4 py-2 mx-1 rounded text-sm font-semibold transition-all duration-300 ${
+                    page === currentRoomPage ? "text-white" : "text-gray-700"
                   }`}
+                  style={{
+                    background:
+                      page === currentRoomPage
+                        ? "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))"
+                        : "rgba(240, 240, 240, 1)",
+                    color: page === currentRoomPage ? "white" : "black",
+                  }}
                   onClick={() => setCurrentRoomPage(page)}
                 >
                   {page}

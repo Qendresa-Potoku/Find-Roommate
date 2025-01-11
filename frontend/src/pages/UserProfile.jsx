@@ -194,15 +194,23 @@ const UserProfile = () => {
         <div className="text-center mt-6">
           {friends.includes(id) ? (
             <button
-              className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
+              className="w-full  text-white py-3 rounded-lg font-semibold"
               onClick={() => navigate(`/chats/${id}`)}
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(0, 128, 0, 0), green)",
+              }}
             >
-              Start Chat
+              Chat
             </button>
           ) : (
             <button
-              className="w-full bg-blue-500 text-white py-3 rounded-lg font-semibold"
+              className="w-full  text-white py-3 rounded-lg font-semibold"
               onClick={sendFriendRequest}
+              style={{
+                background:
+                  "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))",
+              }}
             >
               Add Friend
             </button>
@@ -218,7 +226,8 @@ const UserProfile = () => {
             {rooms.map((room) => (
               <div
                 key={room._id}
-                className="border rounded-lg shadow-md p-4 flex flex-col items-center bg-white"
+                className="border rounded-lg shadow-md p-4 flex flex-col items-center bg-white cursor-pointer"
+                onClick={() => navigate(`/room/${room._id}`)}
               >
                 {/* Room Header */}
                 <div className="flex items-center w-full mb-4">
@@ -249,13 +258,19 @@ const UserProfile = () => {
                   {room.images && room.images.length > 1 && (
                     <>
                       <button
-                        onClick={() => handlePreviousPhoto(room._id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent parent onClick from triggering
+                          handlePreviousPhoto(room._id);
+                        }}
                         className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center"
                       >
                         &lt;
                       </button>
                       <button
-                        onClick={() => handleNextPhoto(room._id)}
+                        onClick={(e) => {
+                          e.stopPropagation(); // Prevent parent onClick from triggering
+                          handleNextPhoto(room._id);
+                        }}
                         className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center"
                       >
                         &gt;

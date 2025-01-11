@@ -30,6 +30,7 @@ const MyProfile = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [isEditingRoom, setIsEditingRoom] = useState(false);
   const [editRoomId, setEditRoomId] = useState(null);
+  const [showPopup, setShowPopup] = useState(false);
   const [roomData, setRoomData] = useState({
     rent: "",
     availableFrom: "",
@@ -211,9 +212,14 @@ const MyProfile = () => {
         }
       );
 
-      setMessage("Profile updated successfully.");
       setIsEditing(false);
       setUserData(response.data.user);
+
+      // Show the popup and hide it after 4 seconds
+      setShowPopup(true);
+      setTimeout(() => {
+        setShowPopup(false);
+      }, 4000);
     } catch (error) {
       console.error("Error updating profile:", error.response?.data || error);
       setMessage(
@@ -286,29 +292,28 @@ const MyProfile = () => {
         </div>
 
         {activeTab === "profile" && (
-          <div>
-            <h3 className="text-3xl font-bold text-center text-blue-700 mb-6">
+          <div className="flex flex-col justify-center items-center p-6 bg-gray-100 min-h-screen">
+            <h3 className="text-3xl font-bold text-blue-700 mb-6">
               My Profile
             </h3>
 
             {message && <p className="text-red-500 text-center">{message}</p>}
 
             {!isEditing ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <img
-                    src={
-                      userData.image
-                        ? `http://localhost:5555/${userData.image.replace(
-                            /\\/g,
-                            "/"
-                          )}`
-                        : "/default-profile.png"
-                    }
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover mb-4"
-                  />
-
+              <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl flex flex-col items-center">
+                <img
+                  src={
+                    userData.image
+                      ? `http://localhost:5555/${userData.image.replace(
+                          /\\/g,
+                          "/"
+                        )}`
+                      : "/default-profile.png"
+                  }
+                  alt="Profile"
+                  className="w-32 h-32 rounded-full object-cover mb-4"
+                />
+                <div className="text-center mb-6">
                   <p>
                     <strong>Name:</strong> {userData.name}
                   </p>
@@ -318,71 +323,77 @@ const MyProfile = () => {
                   <p>
                     <strong>Email:</strong> {userData.email}
                   </p>
-                  <p>
+                  <p className="text-lg">
                     <strong>Age:</strong> {userData.age}
                   </p>
                 </div>
-                <div>
-                  <p>
-                    <strong>Gender:</strong> {userData.gender}
-                  </p>
-                  <p>
-                    <strong>Orientation:</strong> {userData.orientation}
-                  </p>
-                  <p>
-                    <strong>Diet:</strong> {userData.diet}
-                  </p>
+
+                <div className="grid grid-cols-1 gap-4 w-full text-center md:max-w-md">
+                  <div>
+                    <p>
+                      <strong>Gender:</strong> {userData.gender}
+                    </p>
+                    <p>
+                      <strong>Orientation:</strong> {userData.orientation}
+                    </p>
+                    <p>
+                      <strong>Diet:</strong> {userData.diet}
+                    </p>
+                  </div>
+                  <div>
+                    <p>
+                      <strong>Location:</strong> {userData.location?.name}
+                    </p>
+                    <p>
+                      <strong>Education:</strong> {userData.education}
+                    </p>
+                    <p>
+                      <strong>Income:</strong> {userData.income}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p>
-                    <strong>Location:</strong> {userData.location?.name}
-                  </p>
-                  <p>
-                    <strong>Education:</strong> {userData.education}
-                  </p>
-                  <p>
-                    <strong>Income:</strong> {userData.income}
-                  </p>
-                </div>
-                <div className="flex justify-center mt-6 col-span-3">
-                  <button
-                    className="bg-blue-600 text-white py-2 px-8 rounded-md hover:bg-blue-700 transition"
-                    onClick={toggleEdit}
-                  >
-                    Edit Profile
-                  </button>
-                </div>
+
+                <button
+                  className=" text-white py-2 px-8 rounded-md mt-6 hover:bg-blue-700 transition"
+                  onClick={toggleEdit}
+                  style={{
+                    background:
+                      "linear-gradient(to right, rgba(13, 123, 240, 0), rgb(9, 60, 114))",
+                  }}
+                >
+                  Edit Profile
+                </button>
               </div>
             ) : (
               <form
                 onSubmit={handleSubmit}
-                className="grid grid-cols-1 md:grid-cols-3 gap-6"
+                className="bg-white shadow-lg rounded-lg p-8 w-full max-w-4xl flex flex-col items-center"
               >
-                <div className="mb-4">
-                  <label className="block text-gray-700 text-sm font-medium">
-                    Profile Image
-                  </label>
-                  <img
-                    src={
-                      userData.image
-                        ? `http://localhost:5555/${userData.image.replace(
-                            /\\/g,
-                            "/"
-                          )}`
-                        : "/default-profile.png"
-                    }
-                    alt="Profile"
-                    className="w-24 h-24 rounded-full object-cover mb-2"
-                  />
-                  <input
-                    type="file"
-                    onChange={handleUserImageChange}
-                    accept="image/*"
-                    className="mt-2"
-                  />
-                </div>
-                <div>
-                  <div className="mb-4">
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium">
+                      Profile Image
+                    </label>
+                    <img
+                      src={
+                        userData.image
+                          ? `http://localhost:5555/${userData.image.replace(
+                              /\\/g,
+                              "/"
+                            )}`
+                          : "/default-profile.png"
+                      }
+                      alt="Profile"
+                      className="w-24 h-24 rounded-full object-cover mb-2"
+                    />
+                    <input
+                      type="file"
+                      onChange={handleUserImageChange}
+                      accept="image/*"
+                      className="mt-2"
+                    />
+                  </div>
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Name
                     </label>
@@ -395,7 +406,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Username
                     </label>
@@ -408,7 +419,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Email
                     </label>
@@ -421,7 +432,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Age
                     </label>
@@ -434,7 +445,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Gender
                     </label>
@@ -449,7 +460,7 @@ const MyProfile = () => {
                     </select>
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Orientation
                     </label>
@@ -466,8 +477,8 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                <div>
-                  <div className="mb-4">
+                <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Diet
                     </label>
@@ -485,7 +496,7 @@ const MyProfile = () => {
                     </select>
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label
                       htmlFor="location"
                       className="block text-gray-700 text-sm font-medium"
@@ -498,7 +509,6 @@ const MyProfile = () => {
                       name="location"
                       type="text"
                       className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring focus:ring-blue-500"
-                      required
                       value={userData.location?.name || ""}
                       onChange={(e) =>
                         setUserData({
@@ -511,7 +521,7 @@ const MyProfile = () => {
                       }
                     />
                   </div>
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Education
                     </label>
@@ -524,7 +534,7 @@ const MyProfile = () => {
                     />
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Income
                     </label>
@@ -536,10 +546,8 @@ const MyProfile = () => {
                       className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Ethnicity
                     </label>
@@ -558,7 +566,7 @@ const MyProfile = () => {
                     </select>
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Pets
                     </label>
@@ -574,7 +582,7 @@ const MyProfile = () => {
                     </select>
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Do you smoke?
                     </label>
@@ -590,7 +598,7 @@ const MyProfile = () => {
                     </select>
                   </div>
 
-                  <div className="mb-4">
+                  <div>
                     <label className="block text-gray-700 text-sm font-medium">
                       Do you drink?
                     </label>
@@ -607,7 +615,7 @@ const MyProfile = () => {
                   </div>
                 </div>
 
-                <div className="flex justify-between col-span-3">
+                <div className="flex justify-between w-full mt-6">
                   <button
                     type="button"
                     onClick={cancelEdit}
@@ -616,14 +624,26 @@ const MyProfile = () => {
                     Cancel
                   </button>
                   <button
-                    type="button"
-                    onClick={handleSubmit}
+                    type="submit"
                     className="bg-blue-600 text-white py-2 px-8 rounded-md hover:bg-blue-700 transition"
                   >
                     Save Profile
                   </button>
                 </div>
               </form>
+            )}
+            {showPopup && (
+              <div
+                className={`fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-opacity duration-300 ${
+                  showPopup ? "opacity-100 visible z-50" : "opacity-0 invisible"
+                }`}
+              >
+                <div className="bg-white text-black py-4 px-6 rounded-lg shadow-lg text-center">
+                  <p className="text-lg font-semibold">
+                    Profile Updated Successfully!
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
@@ -668,53 +688,73 @@ const MyProfile = () => {
                   Add New Room
                 </button>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="flex flex-wrap justify-center gap-10 px-6">
                   {userPosts.map((post) => (
                     <div
                       key={post._id}
-                      className="card p-4 bg-gray-100 rounded shadow"
+                      className="relative w-[320px] bg-white border cursor-pointer rounded-2xl shadow-lg p-4 transition-all duration-500 hover:shadow-xl hover:translate-y-[-8px] group"
                     >
-                      <img
-                        src={
-                          post.images && post.images.length > 0
-                            ? `http://localhost:5555/${post.images[0].replace(
-                                /\\/g,
-                                "/"
-                              )}`
-                            : "/default-room.png"
-                        }
-                        alt="Room"
-                        className="w-full h-48 object-cover rounded mb-2"
-                      />
-                      <h4 className="font-bold text-lg">${post.rent} / mo</h4>
-                      <p>
-                        <strong>Available:</strong>{" "}
-                        {new Date(post.availableFrom).toLocaleDateString()}
-                      </p>
-                      <p>
-                        <strong>Type:</strong> {post.type}
-                      </p>
-                      <p>
-                        <strong>Layout:</strong> {post.layout}
-                      </p>
-                      <p>
-                        <strong>Deposit:</strong> ${post.deposit}
-                      </p>
-                      <p>
-                        <strong>Location:</strong> {post.location?.name}
-                      </p>
+                      {/* Subtle Layer Effect */}
+                      <div className="absolute inset-0 rounded-2xl bg-gray-100 z-[-1] group-hover:scale-105 group-hover:bg-gray-200 transition-all duration-500"></div>
+
+                      {/* Room Image */}
+                      <div className="rounded-lg overflow-hidden mb-4">
+                        <img
+                          src={
+                            post.images && post.images.length > 0
+                              ? `http://localhost:5555/${post.images[0].replace(
+                                  /\\/g,
+                                  "/"
+                                )}`
+                              : "/default-room.png"
+                          }
+                          alt="Room"
+                          className="w-full h-40 object-cover"
+                        />
+                      </div>
+
+                      {/* Room Info */}
+                      <div className="space-y-2">
+                        <p className="font-bold text-xl text-gray-800">
+                          ${post.rent} / mo
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Available:</strong>{" "}
+                          {new Date(post.availableFrom).toLocaleDateString()}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Type:</strong> {post.type}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Layout:</strong> {post.layout}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Deposit:</strong> ${post.deposit}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          <strong>Location:</strong> {post.location?.name}
+                        </p>
+                      </div>
 
                       {/* Edit and Delete buttons */}
                       <div className="flex justify-between mt-4">
                         <button
-                          className="bg-yellow-500 text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition"
+                          className=" text-white py-2 px-4 rounded-md hover:bg-yellow-600 transition"
                           onClick={() => handleEditRoom(post)}
+                          style={{
+                            background:
+                              "linear-gradient(to right, rgba(13, 123, 240, 0),orange)",
+                          }}
                         >
                           Edit
                         </button>
                         <button
-                          className="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600 transition"
+                          className=" text-white py-2 px-4 rounded-md hover:bg-red-600 transition"
                           onClick={() => handleDeleteRoom(post._id)}
+                          style={{
+                            background:
+                              "linear-gradient(to right, rgba(13, 123, 240, 0), red)",
+                          }}
                         >
                           Delete
                         </button>
@@ -727,112 +767,169 @@ const MyProfile = () => {
 
             {/* Room Post Form */}
             {canPostRoom && (
-              <form onSubmit={handleRoomSubmit} className="mt-6">
-                <h4 className="text-xl mb-4">
+              <form
+                onSubmit={handleRoomSubmit}
+                className="bg-white shadow-md rounded-lg p-6 w-full max-w-3xl mx-auto"
+              >
+                <h4 className="text-2xl font-bold text-gray-700 mb-6 text-center">
                   {isEditingRoom ? "Edit Room Listing" : "Add Room Listing"}
                 </h4>
-                <div>
-                  <label>Rent</label>
-                  <input
-                    type="number"
-                    name="rent"
-                    value={roomData.rent}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Rent */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Rent
+                    </label>
+                    <input
+                      type="number"
+                      name="rent"
+                      value={roomData.rent}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter rent amount"
+                    />
+                  </div>
+
+                  {/* Available From */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Available From
+                    </label>
+                    <input
+                      type="date"
+                      name="availableFrom"
+                      value={roomData.availableFrom}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                    />
+                  </div>
+
+                  {/* Duration */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Duration
+                    </label>
+                    <input
+                      type="text"
+                      name="duration"
+                      value={roomData.duration}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter duration"
+                    />
+                  </div>
+
+                  {/* Type */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Type
+                    </label>
+                    <input
+                      type="text"
+                      name="type"
+                      value={roomData.type}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter room type"
+                    />
+                  </div>
+
+                  {/* Layout */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Layout
+                    </label>
+                    <input
+                      type="text"
+                      name="layout"
+                      value={roomData.layout}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter room layout"
+                    />
+                  </div>
+
+                  {/* Deposit */}
+                  <div>
+                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                      Deposit
+                    </label>
+                    <input
+                      type="number"
+                      name="deposit"
+                      value={roomData.deposit}
+                      onChange={handleRoomChange}
+                      required
+                      className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                      placeholder="Enter deposit amount"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label>Available From</label>
-                  <input
-                    type="date"
-                    name="availableFrom"
-                    value={roomData.availableFrom}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
-                </div>
-                <div>
-                  <label>Duration</label>
-                  <input
-                    type="text"
-                    name="duration"
-                    value={roomData.duration}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
-                </div>
-                <div>
-                  <label>Type</label>
-                  <input
-                    type="text"
-                    name="type"
-                    value={roomData.type}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
-                </div>
-                <div>
-                  <label>Layout</label>
-                  <input
-                    type="text"
-                    name="layout"
-                    value={roomData.layout}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
-                </div>
-                <div>
-                  <label>Deposit</label>
-                  <input
-                    type="number"
-                    name="deposit"
-                    value={roomData.deposit}
-                    onChange={handleRoomChange}
-                    required
-                    className="border p-2 w-full"
-                  />
-                </div>
-                <div>
-                  <label>Description</label>
+
+                {/* Description */}
+                <div className="mt-6">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Description
+                  </label>
                   <textarea
                     name="description"
                     value={roomData.description}
                     onChange={handleRoomChange}
                     required
-                    className="border p-2 w-full"
-                  />
+                    className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                    placeholder="Enter room description"
+                    rows="4"
+                  ></textarea>
                 </div>
-                <div>
-                  <label>Location</label>
+
+                {/* Location */}
+                <div className="mt-6">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Location
+                  </label>
                   <input
                     type="text"
                     name="location"
                     value={roomData.location?.name}
                     onChange={handleRoomChange}
                     required
-                    className="border p-2 w-full"
+                    className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
+                    placeholder="Enter location name"
                   />
                 </div>
-                <div>
-                  <label>Images</label>
+
+                {/* Images */}
+                <div className="mt-6">
+                  <label className="block text-gray-700 text-sm font-medium mb-2">
+                    Images
+                  </label>
                   <input
                     type="file"
                     multiple
                     onChange={handleImageChange}
-                    className="border p-2 w-full"
+                    className="border border-gray-300 rounded-lg w-full p-3 focus:ring focus:ring-blue-500 focus:outline-none"
                   />
                 </div>
-                <button
-                  type="submit"
-                  className="bg-blue-600 text-white py-2 px-8 rounded mt-4"
-                >
-                  {isEditingRoom ? "Save Changes" : "Submit Room"}
-                </button>
+
+                {/* Submit Button */}
+                <div className="flex justify-center mt-6">
+                  <button
+                    type="submit"
+                    className=" text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 text-sm"
+                    style={{
+                      background:
+                        "linear-gradient(to right, rgba(13, 123, 240, 0), blue)",
+                    }}
+                  >
+                    {isEditingRoom ? "Save Changes" : "Submit Room"}
+                  </button>
+                </div>
               </form>
             )}
           </div>

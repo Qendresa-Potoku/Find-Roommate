@@ -1,6 +1,13 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { getUser, resetUserSession } from "../services/AuthServices";
+import {
+  FaHome,
+  FaUserFriends,
+  FaUserAlt,
+  FaComments,
+  FaSignOutAlt,
+} from "react-icons/fa"; // Import icons
 import logo from "../assets/images/black.png";
 import "../styles/Header.css";
 
@@ -25,8 +32,8 @@ const Header = () => {
 
         {/* Navigation Links */}
         <nav className="flex items-center space-x-6">
-          <Link to="/" className="hover:text-blue-300">
-            Home
+          <Link to="/" className="hover:text-blue-300 flex items-center">
+            <FaHome className="mr-2" /> Home
           </Link>
           {!user ? (
             <>
@@ -39,20 +46,29 @@ const Header = () => {
             </>
           ) : (
             <>
-              <Link to="/friends" className="hover:text-blue-300">
-                Friends
+              <Link
+                to="/friends"
+                className="hover:text-blue-300 flex items-center"
+              >
+                <FaUserFriends className="mr-2" /> Friends
               </Link>
-              <Link to="/my-profile" className="hover:text-blue-300">
-                My Profile
+              <Link
+                to="/my-profile"
+                className="hover:text-blue-300 flex items-center"
+              >
+                <FaUserAlt className="mr-2" /> My Profile
               </Link>
-              <Link to="/chats" className="hover:text-blue-300">
-                Chats
+              <Link
+                to="/chats"
+                className="hover:text-blue-300 flex items-center"
+              >
+                <FaComments className="mr-2" /> Chats
               </Link>
               <button
                 onClick={handleLogout}
-                className="bg-blue-700 hover:bg-blue-900 text-white py-2 px-4 rounded"
+                className="bg-blue-700 hover:bg-blue-900 text-white py-2 px-4 rounded flex items-center"
               >
-                Sign Out
+                <FaSignOutAlt className="mr-2" /> Sign Out
               </button>
             </>
           )}

@@ -137,7 +137,8 @@ const Friends = () => {
               friends.map((friend) => (
                 <li
                   key={friend._id}
-                  className="border p-4 rounded-lg shadow-md flex items-center justify-between w-1/2 mb-4"
+                  className="border p-4 rounded-lg shadow-md flex items-center justify-between w-1/2 mb-4 cursor-pointer"
+                  onClick={() => navigate(`/profile/${friend._id}`)}
                 >
                   <div className="flex items-center">
                     {friend.image && (
@@ -152,8 +153,15 @@ const Friends = () => {
                     <p className="text-lg font-medium">{friend.name}</p>
                   </div>
                   <button
-                    onClick={() => navigate(`/chats/${friend._id}`)}
-                    className="bg-green-500 text-white py-1 px-4 rounded text-sm"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent parent onClick from firing
+                      navigate(`/chats/${friend._id}`);
+                    }}
+                    className=" text-white py-1 px-4 rounded text-sm"
+                    style={{
+                      background:
+                        "linear-gradient(to right, rgba(0, 128, 0, 0), green)",
+                    }}
                   >
                     Chat
                   </button>
@@ -192,13 +200,21 @@ const Friends = () => {
                   <div>
                     <button
                       onClick={() => acceptFriendRequest(request._id)}
-                      className="mr-2 bg-green-500 text-white py-1 px-4 rounded"
+                      className="mr-2  text-white py-1 px-4 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(to right, rgba(0, 128, 0, 0), green)",
+                      }}
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => deleteFriendRequest(request._id)}
-                      className="bg-red-500 text-white py-1 px-4 rounded"
+                      className=" text-white py-1 px-4 rounded"
+                      style={{
+                        background:
+                          "linear-gradient(to right, rgba(0, 128, 0, 0), red)",
+                      }}
                     >
                       Delete
                     </button>
