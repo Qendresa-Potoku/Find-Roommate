@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import cors from "cors";
 import http from "http";
 import { Server } from "socket.io";
-import { PORT, mongoDBURL } from "./config.js";
+import { PORT } from "./config.js";
 import authRoutes from "./routes/authRoutes.js";
 import roomRoutes from "./routes/roomRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
@@ -14,6 +14,9 @@ import path from "path";
 
 dotenv.config();
 
+const mongoDBURL = process.env.MONGODB_URL;
+
+// Directory setup
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 

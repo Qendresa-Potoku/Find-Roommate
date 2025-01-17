@@ -116,8 +116,8 @@ const Home = () => {
                   )}
                 </div>
                 <div className="flex flex-col">
-                  <p className="font-bold text-lg">{userItem.name}</p>
-                  <p className="text-gray-600 text-sm">{userItem.email}</p>
+                  <p className="font-bold text-lg ml-2">{userItem.name}</p>
+
                   {user && (
                     <button
                       onClick={() => sendFriendRequest(userItem._id)}
@@ -156,7 +156,7 @@ const Home = () => {
                   )}
                 </div>
                 <div className="p-4">
-                  <p className="text-xl font-bold">${room.rent} / mo</p>
+                  <p className="text-xl font-bold">€{room.rent} / mo</p>
                   <p>
                     <strong>Available:</strong>{" "}
                     {new Date(room.availableFrom).toLocaleDateString()}
@@ -168,7 +168,7 @@ const Home = () => {
                     <strong>Layout:</strong> {room.layout}
                   </p>
                   <p>
-                    <strong>Deposit:</strong> ${room.deposit}
+                    <strong>Deposit:</strong> €{room.deposit}
                   </p>
                   <p>
                     <strong>Location:</strong> {room.location?.name}

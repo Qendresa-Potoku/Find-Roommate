@@ -42,7 +42,7 @@ function preprocessUser(user) {
       0,
       2
     ),
-    income: user.income,
+
     location: user.location,
     _id: user._id,
     name: user.name,

@@ -157,7 +157,7 @@ const RoomPage = () => {
           {/* Room Details Tags */}
           <div className="flex flex-wrap gap-4 mb-6">
             <button className="py-2 px-4 border border-gray-300 rounded-full text-gray-600">
-              Rent: ${room.rent} / mo
+              Rent: €{room.rent} / mo
             </button>
             <button className="py-2 px-4 border border-gray-300 rounded-full text-gray-600">
               Available: {new Date(room.availableFrom).toLocaleDateString()}
@@ -169,7 +169,7 @@ const RoomPage = () => {
               Layout: {room.layout}
             </button>
             <button className="py-2 px-4 border border-gray-300 rounded-full text-gray-600">
-              Deposit: ${room.deposit}
+              Deposit: €{room.deposit}
             </button>
           </div>
 

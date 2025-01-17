@@ -323,7 +323,7 @@ const MyProfile = () => {
                   <p>
                     <strong>Email:</strong> {userData.email}
                   </p>
-                  <p className="text-lg">
+                  <p>
                     <strong>Age:</strong> {userData.age}
                   </p>
                 </div>

@@ -282,7 +282,7 @@ const UserProfile = () => {
                 {/* Room Details */}
                 <div className="text-center w-full">
                   <p className="text-lg font-bold text-gray-800">
-                    ${room.rent} / mo
+                    €{room.rent} / mo
                   </p>
                   <p className="text-gray-600 text-sm mt-1">
                     {room.type || "N/A"} • {room.layout || "N/A"}

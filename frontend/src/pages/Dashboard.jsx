@@ -331,7 +331,7 @@ const Dashboard = () => {
                 {/* Room Info */}
                 <div className="space-y-2">
                   <p className="font-bold text-xl text-gray-800">
-                    ${room.rent} / mo
+                    €{room.rent} / mo
                   </p>
                   <p className="text-sm text-gray-600">
                     <strong>Available:</strong>{" "}
@@ -344,7 +344,7 @@ const Dashboard = () => {
                     <strong>Layout:</strong> {room.layout}
                   </p>
                   <p className="text-sm text-gray-600">
-                    <strong>Deposit:</strong> ${room.deposit}
+                    <strong>Deposit:</strong> €{room.deposit}
                   </p>
                   <p className="text-sm text-gray-600">
                     <strong>Location:</strong> {room.location?.name}
