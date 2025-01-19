@@ -160,7 +160,7 @@ export async function findNearestUsers(targetUserId, k = null) {
   console.log("Sorted Distances:");
   distances.forEach((entry) => {
     console.log(
-      `Name: ${entry.user.name} (${entry.user._id}) | Location: ${entry.user.location?.name} | Distance: ${entry.distance}`
+      `Name: ${entry.user.name} (${entry.user._id}) | Location: ${entry.user.location?.name} | Euclidian Distance: ${entry.distance}`
     );
   });
 
@@ -169,28 +169,29 @@ export async function findNearestUsers(targetUserId, k = null) {
 
 export async function findNearestRooms(targetUserId, k = null) {
   const weights = {
-    rent: 0.4,
-    location: 0.6,
+    rent: 0.3,
+    location: 0.7,
   };
 
   try {
-    const targetUser = preprocessUser(await User.findById(targetUserId));
+    const targetUser = preprocessUser(await User.findById(targetUserId).lean());
+    const allRooms = await Room.find({ userId: { $ne: targetUserId } }).lean();
+
     if (!targetUser?.location?.coordinates) {
-      console.warn(
+      throw new Error(
         `Target user (${targetUserId}) has invalid or missing location.`
       );
-      return [];
     }
-
-    targetUser.income = Number(targetUser.income);
-    const allRooms = await Room.find({ userId: { $ne: targetUserId } });
     if (!allRooms.length) {
       throw new Error("No rooms found in the database.");
     }
 
-    const rents = allRooms.map((room) => Number(room.rent));
-    const rentMin = Math.min(...rents);
-    const rentMax = Math.max(...rents);
+    const rents = allRooms.map((room) => room.rent);
+    const incomes = rents.concat(targetUser.income);
+    const incomeMin = Math.min(...incomes);
+    const incomeMax = Math.max(...incomes);
+
+    targetUser.income = normalize(targetUser.income, incomeMin, incomeMax);
 
     const locations = allRooms
       .map((room) => room.location?.coordinates)
@@ -204,23 +205,28 @@ export async function findNearestRooms(targetUserId, k = null) {
     );
 
     const distances = allRooms.map((room) => {
-      const roomRent = Number(room.rent);
-      const rentDiff = Math.abs(targetUser.income - roomRent);
-      const normalizedRentDiff = normalize(rentDiff, 0, rentMax - rentMin);
+      const normalizedRent = normalize(room.rent, incomeMin, incomeMax);
+      const rentDiff = Math.abs(targetUser.income - normalizedRent);
 
-      const locDist = haversineDistance(
-        targetUser.location.coordinates,
-        room.location?.coordinates
+      const locDist = room.location?.coordinates
+        ? haversineDistance(
+            targetUser.location.coordinates,
+            room.location.coordinates
+          )
+        : NaN;
+
+      const normalizedLocDist = maxLocationDistance
+        ? normalize(locDist, 0, maxLocationDistance)
+        : 0;
+
+      const distance = Math.sqrt(
+        Math.pow(weights.rent * rentDiff, 2) +
+          Math.pow(weights.location * normalizedLocDist, 2)
       );
-      const normalizedLocDist = normalize(locDist, 0, maxLocationDistance);
-
-      const distance =
-        weights.rent * normalizedRentDiff +
-        weights.location * normalizedLocDist;
 
       console.log(
-        `Room ID: ${room._id}, Rent: ${roomRent}, Location: ${room.location?.name}, ` +
-          `Normalized Rent Diff: ${normalizedRentDiff}, Normalized Location Distance: ${normalizedLocDist}, ` +
+        `Room ID: ${room._id}, Original Rent: ${room.rent}, Normalized Rent: ${normalizedRent}, Location: ${room.location?.name}, ` +
+          `Rent Diff: ${rentDiff}, Normalized Location Distance: ${normalizedLocDist}, ` +
           `Final Weighted Distance: ${distance}`
       );
 
@@ -232,7 +238,7 @@ export async function findNearestRooms(targetUserId, k = null) {
     console.log("Sorted Rooms by Distance:");
     distances.forEach((entry) =>
       console.log(
-        `Room ID: ${entry.room._id}, Rent: ${entry.room.rent}, Location: ${entry.room.location?.name}, Distance: ${entry.distance}`
+        `Room ID: ${entry.room._id}, Rent: ${entry.room.rent}, Location: ${entry.room.location?.name}, Euclidian Distance: ${entry.distance}`
       )
     );
 
